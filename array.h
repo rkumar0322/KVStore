@@ -567,6 +567,22 @@ public:
     size_t size() {
         return len;
     }
+    
+    
+    char* serialize() {
+        size_t total = 0;
+        char** list = new char*[this->len];   
+        for(size_t i = 0; i < this->len; i++) {
+            total += this->get(i)->size_;
+            list[i] = this->get(i)->cstr_;
+        }
+        char* buf = new char[total + this->len];
+        for(size_t i = 0; i < this->len; i++) {
+            strcat(buf, list[i]);
+            strcat(buf, " ");
+        }
+        return buf;
+    }
 };
 
 class IntArray : public Object
@@ -1406,5 +1422,304 @@ public:
      */
     size_t size() {
         return len;
+    }
+};
+
+
+class DoubleArray : public Object
+{
+public:
+    double* arr;
+    size_t len;
+    size_t theoretical_len;
+    /**
+     * @brief Construct a new FloatArray float
+     *
+     */
+    DoubleArray() : Object() {
+        arr=new double[10];
+        len = 0;
+        theoretical_len = 10;
+    }
+
+    /**
+     * @brief Destroy the FloatArray float
+     *
+     */
+    ~DoubleArray() {
+        clear();
+    }
+
+    /** @brief Adds a given float to the end of the FloatArray
+     *
+     * @param o the float to be added to this FloatArray
+     * @return true if the float was added successfully
+     * @return false if the float was NOT added successfully
+     */
+    bool add(double o){
+        if (typeid(o)!=(typeid(arr[0])) and len > 0) {
+
+            return false;
+        } else {
+            if (len >= theoretical_len) {
+                double * newarr = 
+                new double[theoretical_len * 2];
+                for (int i = 0; i < len;i++) {
+                    newarr[i] = arr[i];
+                }
+                newarr[len] = o;
+                delete [] this->arr;
+                arr = newarr;
+                len += 1;
+                theoretical_len = theoretical_len * 2;
+                return true;
+            } else {
+                arr[len] = o;
+                len += 1;
+                return true;
+            }
+        }
+    }
+
+    /**
+     * @brief Adds a given float to the given index of the FloatArray
+     *
+     * @note Pushes the elements at and after @param index down to the end by one index
+     *
+     * @param o the float to be added to this FloatArray
+     * @param index the index at which the given float is to be added
+     * @return true if the float was added successfully
+     * @return false if the float was NOT added successfully
+     */
+    bool add(double o, size_t index) {
+        if (typeid(o)==(typeid(arr[0])) == true) {
+            double *newarr = new double [theoretical_len * 2];
+            for (int i = 0; i < index; i++) {
+                newarr[i] = arr[i];
+            }
+            newarr[index] = o;
+            for (int i = index; i < len; i++) {
+                newarr[i+1] = arr[i];
+            }
+            delete[] arr;
+            arr = newarr;
+            len += 1;
+            theoretical_len *= 2;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @brief Adds all floats from a given FloatArray to the end of this FloatArray
+     *
+     * @param a the FloatArray whose floats will be added to this FloatArray
+     * @return true if ALL the floats in the given FloatArray were added successfully
+     * @return false if at least one of the floats in the given FloatArray were NOT added successfully
+     */
+    bool addAll(DoubleArray *a) {
+
+        if (typeid(a->arr[0]) == typeid(arr[0])) {
+            double* newarr = new double[(len + a->len) * 2];
+            for (int i = 0; i < len;i++) {
+                double o = arr[i];
+                newarr[i] = o;
+            }
+            for (int i = 0; i < a->len;i++) {
+                double o = a->arr[i];
+                newarr[i+len] = o;
+            }
+            len += a->len;
+            theoretical_len = (len + a->len) * 2;
+            delete [] arr;
+            arr = newarr;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @brief Adds all floats from a given FloatArray at the given index in this FloatArray, if the floats in that FloatArray are of the same type
+     * as the floats in this FloatArray
+     *
+     * @note Pushes the elements at and after @param index down to the end by one index
+     *
+     * @param a the FloatArray whose floats will be added to this FloatArray
+     * @param index the index at which the floats in the given FloatArray are to be added
+     * @return true if all the floats in the given FloatArray were added successfully
+     * @return false if at least one of the floats in the given FloatArray were NOT added successfully
+     */
+    bool addAll(DoubleArray *a, size_t index) {
+        if (typeid(a->arr[0]) == typeid(arr[0])) {
+            double* newarr = new double[(len + a->len) * 2];
+            for (int i = 0; i < index;i++) {
+                if (len > 0) {
+                    double o = arr[i];
+                    newarr[i] = o;
+                }
+            }
+            for (int i = 0; i < a->len;i++) {
+                if (a->len > 0) {
+                    double o = a->arr[i];
+                    newarr[i+index] = o;
+                }
+            }
+            for (int i = index; i < len;i++) {
+                if (len > 0) {
+                    double o = arr[i];
+                    newarr[i+a->len] = o;
+                }
+            }
+            len += a->len;
+            theoretical_len = (len + a->len) * 2;
+            delete [] arr;
+            arr = newarr;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @brief Removes all floats from this FloatArray
+     */
+    void clear() {
+        delete [] arr;
+        arr=new double[10];
+        len = 0;
+        theoretical_len = 10;
+    }
+
+    /**
+     * @brief Checks that the given float is equal to this FloatArray, meaning the given float is an FloatArray, and that
+     * FloatArray has the same number of floats as this FloatArray and those floats are equivalent to the floats in this
+     * FloatArray and are in the same order as this FloatArray
+     *
+     * @param o the float to be checked for equality
+     * @return true if:
+     *      1. The given float is an FloatArray
+     *      2. That FloatArray has the same number of floats as this FloatArray
+     *      3. All the floats in the given FloatArray are the same as the ones in this FloatArray, and
+     *      4. Are in the same order as the floats in this FloatArray
+     * @return false if any of the above conditions are not satisfied
+     */
+    bool equals(Object* o) {
+        if (o == nullptr) {
+            return false;
+        }
+        DoubleArray* arr1 = dynamic_cast<DoubleArray*> (o);
+        if (arr1 != nullptr) {
+            if (arr1->len == this->len) {
+                bool isDoubleArray = true;
+                for (int i = 0; i < arr1->len;i++) {
+                    if (arr1->arr[i]==arr[i] == false) {
+                        isDoubleArray = false;
+                        break;
+                    }
+                }
+                return isDoubleArray;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @brief Gets the float at the given index of this FloatArray
+     *
+     * @param index the index in this FloatArray from which to get the float
+     * @return float* the float at the given index in this FloatArray
+     */
+    double get(size_t index) {
+        return arr[index];
+    }
+
+    /**
+     * @brief Calculates the hashcode for this FloatArray
+     *
+     * @return size_t the hashcode for this FloatArray
+     */
+    size_t hash() {
+        return reinterpret_cast<size_t>(this);
+    }
+
+    /**
+     * @brief Gets the index of this FloatArray containing the first instance of an float that is equals()
+     *  to the given float. If the given float is not equals() to any other floats in this FloatArray, returns -1
+     *
+     * @param o the float to be compared for equality to floats in this FloatArray
+     * @return float the index in this FloatArray at which an float that is equals() to the given float exists,
+     * or -1 if such an float does not exist in this FloatArray
+     */
+    int indexOf(double f) {
+        int x = -1;
+        for (int i = 0; i < len;i++) {
+            if (f==arr[i]) {
+                x = i;
+                break;
+            }
+        }
+        return x;
+    }
+
+    /**
+     * @brief Removes the float at the given index in this FloatArray and returns it.
+     *
+     * @note Pulls the elements at and after @param index up to the front by one index
+     *
+     * @param index the index in this FloatArray at which to remove the float
+     * @return float* the removed float
+     */
+    double remove(size_t index) {
+        double o = arr[index];
+        for (int i = index; i < len;i++) {
+            arr[i] = arr[i+1];
+        }
+        len -= 1;
+        return o;
+    }
+
+    /**
+     * @brief Sets the pofloater at the given index in this FloatArray to the given float, and returns the reset float
+     *
+     * @param o the float to be set at the given index in this FloatArray
+     * @param index the index at which to set the given float, and remove the old float
+     * @return float* the float that was replaced in this FloatArray. If there was no float at the given index,
+     * returns nullptr
+     */
+    double set(double o, size_t index) {
+        double o1 = arr[index];
+        arr[index] = o;
+        return o1;
+    }
+
+    /**
+     * @brief Gets the number of elements in this FloatArray
+     *
+     * @return size_t the number of elements in this FloatArray
+     */
+    size_t size() {
+        return len;
+    }
+    
+    char* serialize() {
+        size_t total = 0;
+        char** list = new char*[this->len];
+        for(size_t i = 0; i < this->len; i++) {
+                total += 8;
+                double d = this->get(i);
+                list[i] = 
+                reinterpret_cast<char*>(&d);
+        }
+        char* buf = new char[total + this->len];
+        for(size_t i = 0; i < this->len; i++) {
+                strcat(buf, list[i]);
+                strcat(buf, " ");
+        }
+        return buf;
     }
 };

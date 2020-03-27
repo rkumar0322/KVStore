@@ -1,0 +1,192 @@
+#pragma once
+#include "object.h"
+#include "string.h"
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#include <stdlib.h>
+#include <netinet/in.h>
+#include <string>
+#include "array.h"
+#include <arpa/inet.h>
+
+
+enum class MsgKind { Ack, Nack, Put,
+
+                    Reply,  Get, WaitAndGet, Status,
+
+                    Kill,   Register,  Directory };
+
+ 
+
+class Message : public Object {
+	public:		
+    
+    MsgKind kind_;  // the message kind
+
+    size_t sender_; // the index of the sender node
+
+    size_t target_; // the index of the receiver node
+
+    size_t id_;     // an id t unique within the node
+
+
+    char* serialize() {
+        
+    }
+};
+
+ 
+
+class Ack : public Message {
+
+
+    public:
+    
+    Ack(size_t s1, size_t s2, size_t s3) {
+        kind_ = MsgKind::Ack;
+        sender_ = s1;
+        target_ = s2;
+        id_ = s3;
+    }
+
+
+    char* serialize() {
+        size_t kind = 1;
+        size_t sender = sender_;
+        size_t target = target_;
+        size_t id = id_;    
+        char* kind_code = reinterpret_cast<char*>(&kind);
+        char* sender_code = reinterpret_cast<char*>(&sender);
+        char* target_code = reinterpret_cast<char*>(&target);
+        char* id_code = reinterpret_cast<char*>(&id);
+        size_t total = 4*sizeof(size_t) + 3;
+        char* buf = new char[total];
+        strcat(buf, kind_code);
+        strcat(buf, " ");
+        strcat(buf, sender_code);
+        strcat(buf, " ");
+        strcat(buf, target_code);
+        strcat(buf, " ");
+        strcat(buf, id_code);
+        return buf; 
+    }
+};
+
+ 
+
+class Status : public Message {
+
+
+    public:
+
+    StrArray* msg_; // owned
+    
+    
+    Status(size_t s1, size_t s2, size_t s3, StrArray* s) {
+        kind_ = MsgKind::Status;
+        sender_ = s1;
+        target_ = s2;
+        id_ = s3;
+        msg_ = s; 
+    }
+
+    char* serialize() {
+        size_t kind = 7; 
+        size_t sender = sender_;
+        size_t target = target_;
+        size_t id = id_;    
+        char* kind_code = reinterpret_cast<char*>(&kind);
+        char* sender_code = reinterpret_cast<char*>(&sender);
+        char* target_code = reinterpret_cast<char*>(&target);
+        char* id_code = reinterpret_cast<char*>(&id);
+        char* msg_buf = msg_->serialize();
+        size_t total = 4*sizeof(size_t) + sizeof(msg_buf);
+        char* buf = new char[total];
+        strcat(buf, kind_code);
+        strcat(buf, " ");
+        strcat(buf, sender_code);
+        strcat(buf, " ");
+        strcat(buf, target_code);
+        strcat(buf, " ");
+        strcat(buf, id_code);
+        strcat(buf, " msg: ");
+        strcat(buf, msg_buf);
+        return buf; 
+    }
+
+};
+
+ 
+
+class Register : public Message {
+
+    struct sockaddr_in client;
+
+    size_t port;
+
+    char* serialize() {
+
+        char* port_code = reinterpret_cast<char*>(&port);
+    }
+
+
+};
+
+ 
+
+class Directory : public Message {
+
+    public:
+
+    size_t client;
+
+    size_t * ports;  // owned
+
+    StrArray* addresses;  // owned; strings owned
+
+    
+    Directory(size_t s1, size_t s2, size_t s3, size_t s4, 
+    size_t* s5, StrArray* s) {
+        kind_ = MsgKind::Directory;
+        sender_ = s1;
+        target_ = s2;
+        id_ = s3;
+        client = s4;
+        ports = s5;
+        addresses = s; 
+    }
+
+    char* serialize() {
+        size_t kind = 10; 
+        size_t sender = sender_;
+        size_t target = target_;
+        size_t id = id_;    
+        size_t portss = *ports;
+        char* kind_code = reinterpret_cast<char*>(&kind);
+        char* sender_code = reinterpret_cast<char*>(&sender);
+        char* target_code = reinterpret_cast<char*>(&target);
+        char* id_code = reinterpret_cast<char*>(&id);
+        char* client_code = reinterpret_cast<char*>(&client);
+        char* ports_code = reinterpret_cast<char*>(ports);
+        char* addresses_code = addresses->serialize();
+        size_t total = 4*sizeof(size_t) + sizeof(addresses_code);
+        char* buf = new char[total];
+        strcat(buf, kind_code);
+        strcat(buf, " ");
+        strcat(buf, sender_code);
+        strcat(buf, " ");
+        strcat(buf, target_code);
+        strcat(buf, " ");
+        strcat(buf, id_code);
+        strcat(buf, " ");
+        strcat(buf, client_code);
+        strcat(buf, " ");
+        strcat(buf, ports_code);
+        strcat(buf, " address: ");
+        strcat(buf, addresses_code);
+        return buf; 
+
+   }
+
+};
