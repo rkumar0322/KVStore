@@ -76,6 +76,10 @@ class Schema : public Object {
                   column_types[column_num] = *"F";
                   column_num ++;
           }
+      else if(typ == *"D") {
+                  column_types[column_num] = *"D";
+                  column_num ++;
+          }
   }
  
   /** Add a row with a name (possibly nullptr), name is external.  Names are

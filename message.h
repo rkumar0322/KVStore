@@ -30,10 +30,6 @@ class Message : public Object {
 
     size_t id_;     // an id t unique within the node
 
-
-    char* serialize() {
-        
-    }
 };
 
  
@@ -50,27 +46,23 @@ class Ack : public Message {
         id_ = s3;
     }
 
-
-    char* serialize() {
-        size_t kind = 1;
-        size_t sender = sender_;
-        size_t target = target_;
-        size_t id = id_;    
-        char* kind_code = reinterpret_cast<char*>(&kind);
-        char* sender_code = reinterpret_cast<char*>(&sender);
-        char* target_code = reinterpret_cast<char*>(&target);
-        char* id_code = reinterpret_cast<char*>(&id);
-        size_t total = 4*sizeof(size_t) + 3;
-        char* buf = new char[total];
-        strcat(buf, kind_code);
-        strcat(buf, " ");
-        strcat(buf, sender_code);
-        strcat(buf, " ");
-        strcat(buf, target_code);
-        strcat(buf, " ");
-        strcat(buf, id_code);
-        return buf; 
+    bool equals(Object *o) {
+        if (o == nullptr) {
+            return false;
+        }
+        Ack* ack1 = dynamic_cast<Ack*> (o);
+        if (sender_ != ack1->sender_) {
+            return false;
+        }
+        if (target_ != ack1->target_) {
+            return false;
+        }
+        if (id_ != ack1->id_) {
+            return false;
+        }
+        return true;
     }
+
 };
 
  
@@ -125,12 +117,7 @@ class Register : public Message {
 
     size_t port;
 
-    char* serialize() {
-
-        char* port_code = reinterpret_cast<char*>(&port);
-    }
-
-
+   
 };
 
  
@@ -157,6 +144,7 @@ class Directory : public Message {
         addresses = s; 
     }
 
+    /*
     char* serialize() {
         size_t kind = 10; 
         size_t sender = sender_;
@@ -187,6 +175,6 @@ class Directory : public Message {
         strcat(buf, addresses_code);
         return buf; 
 
-   }
+   }*/
 
 };

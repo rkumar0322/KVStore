@@ -4,8 +4,10 @@
 #include "schema.h"
 #include "column.h"
 #include "row.h"
+#include "serial.h"
 #include <stdio.h>
 #include <thread>
+#include "kvstore.h"
 #ifndef SUBMISSION_DATAFRAME_H
 #define SUBMISSION_DATAFRAME_H
 
@@ -44,7 +46,7 @@ public:
         s.row_cap = schema.row_cap;
         s.column_types = new char(s.column_num);
         memcpy(s.column_types, schema.column_types, s.column_num);
-	for(int i = 0; i < s.column_num; i++) {
+	for(size_t i = 0; i < s.column_num; i++) {
 		if(s.col_type(i) == 'S') {
 			data[i] = new StringColumn();
 		}
@@ -144,7 +146,7 @@ public:
     /** Add a row at the end of this dataframe. The row is expected to have
      *  the right schema and be filled with values, otherwise undedined.  */
     void add_row(Row& row) {
-        for (int i = 0; i < row.num;i++) {
+        for (size_t i = 0; i < row.num;i++) {
             if (data[i]->get_type() == 'S') {
                 data[i]->push_back(row.get_string(i));
             } else if (data[i]->get_type() == 'I') {
@@ -166,6 +168,22 @@ public:
     /** The number of columns in the dataframe.*/
     size_t ncols() {
         return s.width();
+    }
+
+    static DataFrame* fromArray(Key& k, KV& kv, size_t num, double* vals) {
+	    Schema s("D");
+	    DataFrame* ret = new DataFrame(s);
+	    Row r(s);
+	    DoubleArray* da = new DoubleArray();
+	    for(size_t i = 0; i < num; i++) {
+		    da->add(vals[i]);
+		    r.set(0, vals[i]);
+		    ret->add_row(r);
+	    }
+	    char* buf = serialize_double_array(da);
+	    Value* v = new Value(buf);
+	    kv.put(&k, v);
+	    return ret; 
     }
 
     

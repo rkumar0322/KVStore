@@ -7,7 +7,9 @@
 class IntColumn;
 class BoolColumn;
 class FloatColumn;
+class DoubleColumn;
 class StringColumn;
+
 
 /**************************************************************************
  * Column ::
@@ -28,6 +30,9 @@ public:
     virtual FloatColumn* as_float() {
         return nullptr;
     }
+    virtual DoubleColumn* as_double() {
+        return nullptr;
+    }
     virtual StringColumn* as_string() {
         return nullptr;
     }
@@ -41,6 +46,9 @@ public:
         assert(0);
     }
     virtual void push_back(float val) {
+        assert(0);
+    }
+    virtual void push_back(double val) {
         assert(0);
     }
     virtual void push_back(String* val) {
@@ -63,6 +71,8 @@ public:
             return 'S';
         } else if (this->as_float() != nullptr) {
             return 'F';
+        } else if (this->as_double() != nullptr) {
+            return 'D';
         }
     }
 };
@@ -108,7 +118,7 @@ public:
     FloatColumn(float n, ...) {
 
     }
-    int get(size_t idx) {
+    float get(size_t idx) {
         return arr->get(idx);
     }
     FloatColumn* as_float() {
@@ -123,6 +133,36 @@ public:
     }
 
     void push_back(float val) {
+        arr->add(val);
+    }
+};
+
+class DoubleColumn : public Column {
+public:
+
+    DoubleArray* arr;
+
+    DoubleColumn() {
+        this->arr = new DoubleArray();
+    }
+    DoubleColumn(double n, ...) {
+
+    }
+    double get(size_t idx) {
+        return arr->get(idx);
+    }
+    DoubleColumn* as_double() {
+        return this;
+    }
+    /** Set value at idx. An out of bound idx is undefined.  */
+    void set(size_t idx, double val) {
+        arr->set(val,idx);
+    }
+    size_t size() {
+        return arr->size();
+    }
+
+    void push_back(double val) {
         arr->add(val);
     }
 };
