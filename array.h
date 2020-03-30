@@ -3,11 +3,11 @@
 //
 #include "object.h"
 #include "string.h"
+//#pragma once
 #ifndef SUBMISSION_ARRAY_H
 #define SUBMISSION_ARRAY_H
 
 #endif //SUBMISSION_ARRAY_H
-#pragma once
 
 class Array : public Object
 {
@@ -568,7 +568,7 @@ public:
         return len;
     }
     
-    
+    /*
     char* serialize() {
         size_t total = 0;
         char** list = new char*[this->len];   
@@ -583,6 +583,7 @@ public:
         }
         return buf;
     }
+    */
 };
 
 class IntArray : public Object
@@ -1706,6 +1707,7 @@ public:
         return len;
     }
     
+    /*
     char* serialize() {
         size_t total = 0;
         char** list = new char*[this->len];
@@ -1722,4 +1724,5 @@ public:
         }
         return buf;
     }
+    */
 };

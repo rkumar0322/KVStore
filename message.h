@@ -1,14 +1,14 @@
-#pragma once
+//#pragma once
 #include "object.h"
 #include "string.h"
-#include <unistd.h>
+//#include <unistd.h>
 #include <stdio.h>
-#include <sys/socket.h>
+//#include <sys/socket.h>
 #include <stdlib.h>
-#include <netinet/in.h>
+//#include <netinet/in.h>
 #include <string>
 #include "array.h"
-#include <arpa/inet.h>
+//#include <arpa/inet.h>
 
 
 enum class MsgKind { Ack, Nack, Put,
@@ -83,6 +83,7 @@ class Status : public Message {
         msg_ = s; 
     }
 
+/*
     char* serialize() {
         size_t kind = 7; 
         size_t sender = sender_;
@@ -106,6 +107,7 @@ class Status : public Message {
         strcat(buf, msg_buf);
         return buf; 
     }
+    */
 
 };
 
@@ -113,7 +115,7 @@ class Status : public Message {
 
 class Register : public Message {
 
-    struct sockaddr_in client;
+    //struct sockaddr_in client;
 
     size_t port;
 

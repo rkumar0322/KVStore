@@ -1,4 +1,4 @@
-#include <unistd.h>
+//#include <unistd.h>
 #include <assert.h>
 #include "serial.h"
 #include "array.h"
@@ -45,7 +45,13 @@ void test_float() {
     std::cout << "test_float pass" << "\n";
 }
 
-
+void test_string() {
+    String* s = new String("hello");
+    char* buf = serial_string(s);
+    String* ss = deserial_string(buf);
+    assert(s->equals(ss));
+    std::cout << "test_string pass" << "\n";
+}
 
 void test_StrArray() {
     String* s = new String("hello");
@@ -55,7 +61,7 @@ void test_StrArray() {
 	StrArray* sa = new StrArray();
 	sa->add(s);
 	sa->add(ss);
-	char* bufff = sa->serialize();
+	char* bufff = serialize_string_array(sa);
 	StrArray* saa = deserial_string_array(bufff);
 	assert(sa->equals(saa));
 	std::cout << "test_StrArray pass" << "\n";
@@ -67,6 +73,8 @@ void test_DoubleArray() {
     DoubleArray* da = new DoubleArray();
 	da->add(d);
 	da->add(d);
+    da->add(d);
+    da->add(d);
 	char* dbuf = serialize_double_array(da);
 	DoubleArray* daa = deserial_double_array(dbuf);
 	assert(da->equals(daa));
@@ -100,10 +108,12 @@ int main(int argc, char** argv) {
     test_sizet();
     test_bool();
     test_float();
+    test_string();
     test_StrArray();
     test_DoubleArray();
     test_message();
 
+    std::cout << "hello" << "\n";
 
 	return 0;
 }
