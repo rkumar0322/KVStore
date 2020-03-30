@@ -357,7 +357,6 @@ public:
                 return true;
             }
         }
-    }
 
     /**
      * @brief Adds a given String to the given index of the StrArray
@@ -371,7 +370,7 @@ public:
      */
     bool add(String *o, size_t index) {
         if ((typeid(o)==(typeid(arr[0]))) == true) {
-            String **newarr = new String *[theoretical_len * 2];
+            String **newarr = new String *[capacity_ * 2];
             for (size_t i = 0; i < index; i++) {
                 newarr[i] = arr[i];
             }
@@ -382,7 +381,7 @@ public:
             delete[] arr;
             arr = newarr;
             len += 1;
-            theoretical_len *= 2;
+            capacity_ *= 2;
             return true;
         } else {
             return false;
@@ -409,7 +408,7 @@ public:
                 newarr[i+len] = o;
             }
             len += a->len;
-            theoretical_len = (len + a->len) * 2;
+            capacity_ = (len + a->len) * 2;
             delete [] arr;
             arr = newarr;
             return true;
@@ -451,7 +450,7 @@ public:
                 }
             }
             len += a->len;
-            theoretical_len = (len + a->len) * 2;
+            capacity_ = (len + a->len) * 2;
             delete [] arr;
             arr = newarr;
             return true;
@@ -467,7 +466,7 @@ public:
         delete [] arr;
         arr=new String*[10];
         len = 0;
-        theoretical_len = 10;
+        capacity_ = 10;
     }
 
     /**
@@ -563,6 +562,7 @@ public:
     size_t size() {
         return len;
     }
+};
 
 class IntArray : public Object
 {

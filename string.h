@@ -1,7 +1,5 @@
 //#pragma once
 // LANGUAGE: CwC
-#include <cstring>
-#include <string>
 #include <cassert>
 #include "object.h"
 #include "serial.h"

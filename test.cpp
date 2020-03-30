@@ -155,6 +155,25 @@ void serialize_column() {
 
 }
 
+void serialize_column() {
+    DoubleColumn* s = new DoubleColumn();
+    double a = 1.0;
+    double b = 2.0;
+    double c = 3.0;
+    s->push_back(a);
+    s->push_back(b);
+    s->push_back(c);
+    Serializer ser;
+    s->serialize(ser);
+    Deserializer dser(ser.data_,ser.length_);
+    DoubleColumn* s2 = new DoubleColumn(dser);
+    printf("Val1: %f\n",s2->get(0));
+    printf("Val2: %f\n",s2->get(1));
+    printf("Val3: %f\n",s2->get(2));
+
+}
+
+
 void serialize_string() {
     String* s = new String("Rahul");
     Serializer ser;
