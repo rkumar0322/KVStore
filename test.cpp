@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include "serial.h"
-#include "dataframe.h"
+#include "kvstore.h"
 
 
 
@@ -181,6 +181,4 @@ void test_schema_serialize() {
     s->serialize(s1);
     Deserializer d(s1.data_,s1.length_);
     Schema* s2 = new Schema(d);
-    printf("My name is: %s\n", s1->cstr_);
-    printf("My size is: %d\n",s1->size_);
 }

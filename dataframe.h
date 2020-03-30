@@ -7,11 +7,7 @@
 #include "serial.h"
 #include <stdio.h>
 #include <thread>
-#include "kvstore.h"
-#ifndef SUBMISSION_DATAFRAME_H
-#define SUBMISSION_DATAFRAME_H
-
-#endif //SUBMISSION_DATAFRAME_H
+#include "keyvalue.h"
 
 /****************************************************************************
  * DataFrame::
@@ -188,24 +184,6 @@ public:
     /** The number of columns in the dataframe.*/
     size_t ncols() {
         return s.width();
-    }
-
-    static DataFrame* fromArray(Key& k, KV& kv, size_t num, double* vals) {
-	    Schema s("D");
-	    DataFrame* ret = new DataFrame(s);
-	    Row r(s);
-	    DoubleArray* da = new DoubleArray();
-	    for(size_t i = 0; i < num; i++) {
-		    da->add(vals[i]);
-		    r.set(0, vals[i]);
-		    ret->add_row(r);
-	    }
-	    Serializer s1;
-        ret->serialize(s1);
-	    char* buf = s1.data_;
-	    Value* v = new Value(buf);
-	    kv.put(&k, v);
-	    return ret; 
     }
 
     
