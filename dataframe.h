@@ -153,10 +153,10 @@ public:
         }
     }
 
-    void set(size_t col, size_t row, String* val) {
+    void set(size_t col, size_t row, double val) {
         if(col < s.column_num && data[col]->get_type() == 'D') {
             if(row < s.row_num) {
-                data[col]->as_string()->set(row, val);
+                data[col]->as_double()->set(row, val);
             }
         }
     }
@@ -200,7 +200,9 @@ public:
 		    r.set(0, vals[i]);
 		    ret->add_row(r);
 	    }
-	    char* buf = serialize_double_array(da);
+	    Serializer s1;
+        ret->serialize(s1);
+	    char* buf = s1.data_;
 	    Value* v = new Value(buf);
 	    kv.put(&k, v);
 	    return ret; 
@@ -243,7 +245,7 @@ public:
             ser.write_size_t(cap);
             s.serialize(ser);
             for (int i = 0; i < s.column_num;i++) {
-                data[i].serialize(ser);
+                data[i]->serialize(ser);
             }
     }
 };

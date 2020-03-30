@@ -1,13 +1,8 @@
 //
 // Created by Rahul Kumar on 2/13/20.
 //
-#include "object.h"
-#include "string.h"
 #include "serial.h"
-#ifndef SUBMISSION_ARRAY_H
-#define SUBMISSION_ARRAY_H
-
-#endif //SUBMISSION_ARRAY_H
+#include "string.h"
 
 class Array : public Object
 {

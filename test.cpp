@@ -8,6 +8,7 @@
 #include "dataframe.h"
 
 
+
 void serialize_stringarr();
 void serialize_string();
 void toyexample();
@@ -29,6 +30,7 @@ int main() {
     serialize_floatarr();
     serialize_boolarr();
     serialize_column();
+    test_schema_serialize();
 }
 
 void toyexample() {
@@ -174,9 +176,9 @@ void testwritesandreads() {
     printf("final size: %d\n",d.read_size_t());
 }
 void test_schema_serialize() {
-    Schema s = new Schema("SSSSSSSSSS");
+    Schema* s = new Schema("SSSSSSSSSS");
     Serializer s1;
-    s.serialize(s1);
-    Deserializer d(s.data_,s.length_);
-    Schema s = new Schema(d);
+    s->serialize(s1);
+    Deserializer d(s1.data_,s1.length_);
+    Schema* s2 = new Schema(d);
 }
