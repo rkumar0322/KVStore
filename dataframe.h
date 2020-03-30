@@ -186,6 +186,32 @@ public:
         return s.width();
     }
 
+    static DataFrame* fromArray(Key k, KV kv, size_t num, double* vals) {
+	    Schema s("D");
+	    DataFrame* ret = new DataFrame(s);
+	    Row r(s);
+	    DoubleArray* da = new DoubleArray();
+	    for(size_t i = 0; i < num; i++) {
+		    da->add(vals[i]);
+		    r.set(0, vals[i]);
+		    ret->add_row(r);
+	    }
+	    Value* v = new Value(ret);
+	    kv.put(k, v);
+	    return ret;
+    }
+
+    static DataFrame* fromScalar(Key k, KV kv, double val) {
+        Schema s ("D");
+        DataFrame* ret = new DataFrame(s);
+        Row r(s);
+        r.set(0, val);
+        ret->add_row(r);
+        Value* v = new Value(ret);
+        kv.put(k, v);
+        return ret;
+    }
+
     
 
     /** Print the dataframe in SoR format to standard output. */
