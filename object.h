@@ -1,5 +1,6 @@
 #pragma once
 #include "helper.h"
+#include "serial.h"
 // LANGUAGE: CwC
 
 /** Base class for all objects in the system.
@@ -9,6 +10,14 @@ public:
     size_t hash_;  // every object has a hash, subclasses must implement the functionality
 
     Object() { hash_ = 0; }
+
+    Object(Deserializer &ser) {
+        ser.read_size_t();
+    }
+
+    void serialize(Serializer &ser) {
+        ser.write_size_t(hash_);
+    }
       
     /** Subclasses may have something to do on finalziation */
     virtual ~Object() { }

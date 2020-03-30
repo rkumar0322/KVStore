@@ -1,115 +1,183 @@
 #include <iostream>
 #include <assert.h>
 #include <stdio.h>
-#include "string.h"
-#include "message.h"
-#include "array.h"
 #pragma once
 
 #define LOG(...) fprintf(stderr, "(" __FILE__ ") " __VA_ARGS__);
 
-
-char* serial_double(double num) {
-        char* buf = reinterpret_cast<char*>(&num);
-	return buf;
-}
-
-
-double deserial_double(char* buf) {
-	return *reinterpret_cast<double*>(buf);
-}
-
-char* serial_sizet(size_t num) {
-        char* buf = reinterpret_cast<char*>(&num);
-        return buf;
-}
-
-
-size_t deserial_sizet(char* buf) {
-        return *reinterpret_cast<size_t*>(buf);
-}
-
-
-char* serial_string(String* s) {
-	char* buf = s->cstr_;
-	return buf;
-}
-
-
-String* deserial_string(char* buf) {
-	String* s = new String(buf);
-	return s;
-}
-
-DoubleArray* deserial_double_array(char* buf) {
-    DoubleArray* da = new DoubleArray();
-    double d;
-    char* tokens = strtok(buf, " ");
-    std::cout << tokens << "\n";
-    while (tokens != NULL) {
-        d = *reinterpret_cast<double*>(tokens);
-        std::cout << d << "\n";
-        da->add(d);
-        tokens = strtok(NULL, " ");
+class Serializer {
+public:
+    char* data_;
+    size_t length_ = 0;
+    size_t cap_;
+    Serializer() {
+        data_ = new char[1024];
+        cap_ = 1024;
     }
-    return da;
-}
 
-StrArray* deserial_string_array(char* buf) {
-	StrArray* sa = new StrArray();
-	char* tokens = strtok(buf, " ");
-	while (tokens != NULL) {
-		sa->add(new String(tokens));
-		tokens = strtok(NULL, " ");
-	}
-	return sa;
-}
+    void write_size_t(size_t v) {
+        if (length_+ sizeof(size_t) > cap_) {
+            char* newstr = new char[cap_ * 2];
+            memcpy(newstr,data_,length_);
+            delete[] data_;
+            data_ = newstr;
+            cap_ = cap_ * 2;
+        }
+        memcpy(data_+length_,&v, sizeof(size_t));
+        length_ += sizeof(size_t);
+    }
+    void write_chars(char* v, size_t len) {
+        if (length_+ len > cap_) {
+            char* newstr = new char[length_ * 2];
+            memcpy(newstr,data_,length_);
+            delete[] data_;
+            data_ = newstr;
+            cap_ = cap_ * 2;
+        }
+        memcpy(data_+ length_,v, len);
+        length_ += len;
+    }
+    void write_float(float v) {
+        if (length_+ sizeof(size_t) > cap_) {
+            char* newstr = new char[length_ * 2];
+            memcpy(newstr,data_,length_);
+            delete[] data_;
+            data_ = newstr;
+            cap_ = cap_ * 2;
+        }
+        memcpy(data_ + length_,&v, sizeof(float));
+        length_ += sizeof(float);
+    }
+    void write_double(double v) {
+        if (length_+ sizeof(double) > cap_) {
+            char* newstr = new char[length_ * 2];
+            memcpy(newstr,data_,length_);
+            delete[] data_;
+            data_ = newstr;
+            cap_ = cap_ * 2;
+        }
+        memcpy(data_ + length_,&v, sizeof(double));
+        length_ += sizeof(double);
+    }
+    void write_intarr(int* v, size_t len) {
+        if (length_+ (sizeof(int)*len) > cap_) {
+            char* newstr = new char[length_ * 2];
+            memcpy(newstr,data_,length_);
+            delete[] data_;
+            data_ = newstr;
+            cap_ = cap_ * 2;
+        }
+        memcpy(data_ + length_, v, len * sizeof(int));
+        length_ += len * sizeof(int);
+    }
+    void write_floatarr(float* v, size_t len) {
+        if (length_+ (sizeof(float)*len) > cap_) {
+            char* newstr = new char[length_ * 2];
+            memcpy(newstr,data_,length_);
+            delete[] data_;
+            data_ = newstr;
+            cap_ = cap_ * 2;
+        }
+        memcpy(data_ + length_, v, len * sizeof(float));
+        length_ += len * sizeof(float);
+    }
+    void write_doublearr(double* v, size_t len) {
+        if (length_+ (sizeof(double)*len) > cap_) {
+            char* newstr = new char[length_ * 2];
+            memcpy(newstr,data_,length_);
+            delete[] data_;
+            data_ = newstr;
+            cap_ = cap_ * 2;
+        }
+        memcpy(data_ + length_, v, len * sizeof(double));
+        length_ += len * sizeof(double);
+    }
+    void write_boolarr(bool* v, size_t len) {
+        if (length_+ (sizeof(bool)*len) > cap_) {
+            char* newstr = new char[length_ * 2];
+            memcpy(newstr,data_,length_);
+            delete[] data_;
+            data_ = newstr;
+            cap_ = cap_ * 2;
+        }
+        memcpy(data_ + length_, v, len * sizeof(bool));
+        length_ += len * sizeof(bool);
+    }
 
+};
 
-Message* deserial_message(char* buf) {
-    
-    Message* m;
-    size_t t;
-    char* tokens = strtok(buf, " ");
-    t = *reinterpret_cast<size_t*>(tokens);
-    tokens = strtok(NULL, " ");
-    size_t sender = *reinterpret_cast<size_t*>(tokens);
-    tokens = strtok(NULL, " ");
-    size_t target = *reinterpret_cast<size_t*>(tokens);
-    tokens = strtok(NULL, " ");
-    size_t id = *reinterpret_cast<size_t*>(tokens);
-    
-    
-   /* 
-    if(t == 1) {
-        std::cout << "hello" << "\n";
-        m = new Ack(sender, target, id);
-        
+class Deserializer {
+public:
+    char* data_;
+    size_t length_;
+    size_t cap_len;
+    Deserializer(char* data, size_t length) {
+        data_ = data;
+        cap_len = length;
+        length_ = 0;
     }
-    
-    
-    else if (t == 7) {
-        tokens = strtok(NULL, " msg: ");
-        StrArray* msg = deserial:wq_string_array(tokens);
-        m = new Status(sender, target, id, msg);        
+    size_t read_size_t() {
+        size_t v;
+        memcpy(&v,data_+length_, sizeof(size_t));
+        length_ += sizeof(size_t);
+        return v;
     }
-    else if (t == 10) {
-        tokens = strtok(NULL, " ");
-        size_t client = *reinterpret_cast<size_t*>(tokens);
-        tokens = strtok(NULL, " ");
-        size_t* ports = reinterpret_cast<size_t*>(tokens);
-        tokens = strtok(NULL, " address: ");
-        StrArray* addr = deserial_string_array(tokens);
-        m = new Directory(sender, target, 
-        id, client, ports, addr);
+    char* read_chars(size_t len) {
+        char *x = new char[len];
+        memcpy(x, data_ + length_, len * sizeof(char));
+        length_ += len * sizeof(char);
+        return x;
     }
-    else {
-        return NULL;
+    float read_float() {
+        float v;
+        memcpy(&v,data_+length_, sizeof(float));
+        length_ += sizeof(float);
+        return v;
     }
-    */
-     
-    return m;
- 
-}
+    double read_double() {
+        double v;
+        memcpy(&v,data_+length_, sizeof(double));
+        length_ += sizeof(double);
+        return v;
+    }
 
+    int read_int() {
+        int v;
+        memcpy(&v,data_+length_, sizeof(int));
+        length_ += sizeof(int);
+        return v;
+    }
+    bool read_bool() {
+        bool v;
+        memcpy(&v,data_+length_, sizeof(bool));
+        length_ += sizeof(bool);
+        return v;
+    }
+
+    int* read_int_arr(size_t len) {
+        int* x = new int[len];
+        memcpy(x, data_ + length_, len * sizeof(int));
+        length_ += len * sizeof(int);
+        return x;
+    }
+    bool* read_bool_arr(size_t len) {
+        bool *x = new bool[len];
+        memcpy(x, data_ + length_, len * sizeof(bool));
+        length_ += len * sizeof(bool);
+        return x;
+    }
+    double* read_double_arr(size_t len) {
+        double *x = new double[len];
+        memcpy(x, data_ + length_, len * sizeof(double));
+        length_ += len * sizeof(double);
+        return x;
+    }
+    float* read_float_arr(size_t len) {
+        float *x = new float[len];
+        memcpy(x, data_ + length_, len * sizeof(float));
+        length_ += len * sizeof(float);
+        return x;
+    }
+
+};
 

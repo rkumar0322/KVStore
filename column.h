@@ -8,6 +8,7 @@ class IntColumn;
 class BoolColumn;
 class FloatColumn;
 class StringColumn;
+class DoubleColumn;
 
 /**************************************************************************
  * Column ::
@@ -31,6 +32,9 @@ public:
     virtual StringColumn* as_string() {
         return nullptr;
     }
+    virtual DoubleColumn* as_double() {
+        return nullptr;
+    }
 
     /** Type appropriate push_back methods. Calling the wrong method is
       * undefined behavior. **/
@@ -44,6 +48,9 @@ public:
         assert(0);
     }
     virtual void push_back(String* val) {
+        assert(0);
+    }
+    virtual void push_back(double val) {
         assert(0);
     }
 
@@ -63,6 +70,8 @@ public:
             return 'S';
         } else if (this->as_float() != nullptr) {
             return 'F';
+        } else if (this->as_double() != nullptr) {
+            return 'D';
         }
     }
 };
@@ -78,6 +87,9 @@ public:
     }
     IntColumn(int n, ...){
 
+    }
+    IntColumn(Deserializer &dser) {
+        arr = new IntArray(dser);
     }
     int get(size_t idx) {
         return arr->get(idx);
@@ -95,7 +107,12 @@ public:
     void push_back(int val) {
         arr->add(val);
     }
+    void serialize(Serializer &ser) {
+        arr->serialize(ser);
+    }
 };
+
+
 
 class FloatColumn : public Column {
 public:
@@ -111,6 +128,9 @@ public:
     int get(size_t idx) {
         return arr->get(idx);
     }
+    FloatColumn(Deserializer &dser) {
+        arr = new FloatArray(dser);
+    }
     FloatColumn* as_float() {
         return this;
     }
@@ -124,6 +144,45 @@ public:
 
     void push_back(float val) {
         arr->add(val);
+    }
+    void serialize(Serializer &ser) {
+        arr->serialize(ser);
+    }
+};
+
+class DoubleColumn : public Column {
+public:
+
+    DoubleArray* arr;
+
+    DoubleColumn() {
+        this->arr = new DoubleArray();
+    }
+    DoubleColumn(double n, ...) {
+
+    }
+    double get(size_t idx) {
+        return arr->get(idx);
+    }
+    DoubleColumn* as_double() {
+        return this;
+    }
+    DoubleColumn(Deserializer &dser) {
+        arr = new DoubleArray(dser);
+    }
+    /** Set value at idx. An out of bound idx is undefined.  */
+    void set(size_t idx, double val) {
+        arr->set(val,idx);
+    }
+    size_t size() {
+        return arr->size();
+    }
+
+    void push_back(double val) {
+        arr->add(val);
+    }
+    void serialize(Serializer &ser) {
+        arr->serialize(ser);
     }
 };
 
@@ -144,6 +203,9 @@ public:
     BoolColumn* as_bool() {
         return this;
     }
+    BoolColumn(Deserializer &dser) {
+        arr = new BoolArray(dser);
+    }
     /** Set value at idx. An out of bound idx is undefined.  */
     void set(size_t idx, bool val) {
         arr->set(val,idx);
@@ -153,6 +215,9 @@ public:
     }
     void push_back(bool val) {
         arr->add(val);
+    }
+    void serialize(Serializer &ser) {
+        arr->serialize(ser);
     }
 };
 
@@ -172,6 +237,9 @@ public:
     StringColumn(int n, ...) {
 
     }
+    StringColumn(Deserializer &dser) {
+        arr = new StrArray(dser);
+    }
     StringColumn* as_string() {
         return this;
     }
@@ -188,5 +256,8 @@ public:
     }
     void push_back(String* val) {
         arr->add(val);
+    }
+    void serialize(Serializer &ser) {
+        arr->serialize(ser);
     }
 };

@@ -4,6 +4,7 @@
 #include <string>
 #include <cassert>
 #include "object.h"
+#include "serial.h"
 
 /** An immutable string class that wraps a character array.
  * The character array is zero terminated. The size() of the
@@ -14,7 +15,7 @@
 class String : public Object {
 public:
     size_t size_; // number of characters excluding terminate (\0)
-    char *cstr_;  // owned; char array
+    char* cstr_;  // owned; char array
 
     /** Build a string from a string constant */
     String(char const* cstr, size_t len) {
@@ -29,6 +30,16 @@ public:
         assert(steal && cstr[len]==0);
         size_ = len;
         cstr_ = cstr;
+    }
+
+    String(Deserializer &ser) {
+        size_ = ser.read_size_t();
+        cstr_ = ser.read_chars(size_);
+    }
+
+    void serialize(Serializer &ser) {
+        ser.write_size_t(size_);
+        ser.write_chars(cstr_,size_);
     }
 
     String(char const* cstr) : String(cstr, strlen(cstr)) {}
@@ -123,4 +134,6 @@ public:
         val_ = nullptr; // val_ was consumed above
         return res;
     }
+
+
 };

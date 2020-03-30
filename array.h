@@ -3,6 +3,7 @@
 //
 #include "object.h"
 #include "string.h"
+#include "serial.h"
 #ifndef SUBMISSION_ARRAY_H
 #define SUBMISSION_ARRAY_H
 
@@ -14,7 +15,7 @@ class Array : public Object
 public:
     Object** arr;
     size_t len;
-    size_t theoretical_len;
+    size_t capacity_;
     /**
      * @brief Construct a new Array object
      *
@@ -22,15 +23,27 @@ public:
     Array() : Object() {
         arr=new Object*[10];
         len = 0;
-        theoretical_len = 10;
+        capacity_ = 10;
     }
 
-    /**
-     * @brief Destroy the Array object
-     *
-     */
     ~Array() {
-        clear();
+        delete[] arr;
+    }
+
+    Array(Deserializer &ser) {
+        len = ser.read_size_t();
+        arr = new Object*[len*2];
+        for (int i = 0; i < len;i++) {
+            arr[i] = new Object(ser);
+        }
+        capacity_ = len * 2;
+    }
+
+    void serialize(Serializer &ser) {
+        ser.write_size_t(len);
+        for (int i = 0; i < len;i++) {
+            arr[i]->serialize(ser);
+        }
     }
 
     /** @brief Adds a given Object to the end of the Array
@@ -44,8 +57,8 @@ public:
 
             return false;
         } else {
-            if (len >= theoretical_len) {
-                Object ** newarr = new Object*[theoretical_len * 2];
+            if (len >= capacity_) {
+                Object ** newarr = new Object*[capacity_ * 2];
                 for (int i = 0; i < len;i++) {
                     newarr[i] = arr[i];
                 }
@@ -53,7 +66,7 @@ public:
                 delete [] this->arr;
                 arr = newarr;
                 len += 1;
-                theoretical_len = theoretical_len * 2;
+                capacity_ = capacity_ * 2;
                 return true;
             } else {
                 arr[len] = o;
@@ -75,7 +88,7 @@ public:
      */
     bool add(Object *o, size_t index) {
         if (typeid(o)==(typeid(arr[0])) == true) {
-            Object **newarr = new Object *[theoretical_len * 2];
+            Object **newarr = new Object *[capacity_ * 2];
             for (int i = 0; i < index; i++) {
                 newarr[i] = arr[i];
             }
@@ -86,7 +99,7 @@ public:
             delete[] arr;
             arr = newarr;
             len += 1;
-            theoretical_len *= 2;
+            capacity_ *= 2;
             return true;
         } else {
             return false;
@@ -113,7 +126,7 @@ public:
                 newarr[i+len] = o;
             }
             len += a->len;
-            theoretical_len = (len + a->len) * 2;
+            capacity_ = (len + a->len) * 2;
             delete [] arr;
             arr = newarr;
             return true;
@@ -155,7 +168,7 @@ public:
                 }
             }
             len += a->len;
-            theoretical_len = (len + a->len) * 2;
+            capacity_ = (len + a->len) * 2;
             delete [] arr;
             arr = newarr;
             return true;
@@ -171,7 +184,7 @@ public:
         delete [] arr;
         arr=new Object*[10];
         len = 0;
-        theoretical_len = 10;
+        capacity_ = 10;
     }
 
     /**
@@ -294,23 +307,31 @@ class StrArray : public Object
 public:
     String** arr;
     size_t len;
-    size_t theoretical_len;
-    /**
-     * @brief Construct a new StrArray String
-     *
-     */
+    size_t capacity_=10;
+
     StrArray() : Object() {
-        arr=new String*[10];
         len = 0;
-        theoretical_len = 10;
+        arr=new String*[capacity_];
     }
 
-    /**
-     * @brief Destroy the StrArray String
-     *
-     */
     ~StrArray() {
-        clear();
+        delete[] arr;
+    }
+
+    StrArray(Deserializer &ser) {
+        len = ser.read_size_t();
+        arr = new String*[len * 2];
+        for (int i = 0; i < len;i++) {
+            arr[i] = new String(ser);
+        }
+        capacity_ = len * 2;
+    }
+
+    void serialize(Serializer &ser) {
+        ser.write_size_t(len);
+        for (int i = 0; i < len;i++) {
+            arr[i]->serialize(ser);
+        }
     }
 
     /** @brief Adds a given String to the end of the StrArray
@@ -320,12 +341,8 @@ public:
      * @return false if the String was NOT added successfully
      */
     bool add(String *o){
-        if (typeid(o)!=(typeid(arr[0])) and len > 0) {
-
-            return false;
-        } else {
-            if (len >= theoretical_len) {
-                String ** newarr = new String*[theoretical_len * 2];
+            if (len >= capacity_) {
+                String ** newarr = new String*[capacity_ * 2];
                 for (int i = 0; i < len;i++) {
                     newarr[i] = arr[i];
                 }
@@ -333,7 +350,7 @@ public:
                 delete [] this->arr;
                 arr = newarr;
                 len += 1;
-                theoretical_len = theoretical_len * 2;
+                capacity_ = capacity_ * 2;
                 return true;
             } else {
                 arr[len] = o;
@@ -341,118 +358,6 @@ public:
                 return true;
             }
         }
-    }
-
-    /**
-     * @brief Adds a given String to the given index of the StrArray
-     *
-     * @note Pushes the elements at and after @param index down to the end by one index
-     *
-     * @param o the String to be added to this StrArray
-     * @param index the index at which the given String is to be added
-     * @return true if the String was added successfully
-     * @return false if the String was NOT added successfully
-     */
-    bool add(String *o, size_t index) {
-        if (typeid(o)==(typeid(arr[0])) == true) {
-            String **newarr = new String *[theoretical_len * 2];
-            for (int i = 0; i < index; i++) {
-                newarr[i] = arr[i];
-            }
-            newarr[index] = o;
-            for (int i = index; i < len; i++) {
-                newarr[i+1] = arr[i];
-            }
-            delete[] arr;
-            arr = newarr;
-            len += 1;
-            theoretical_len *= 2;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * @brief Adds all Strings from a given StrArray to the end of this StrArray
-     *
-     * @param a the StrArray whose Strings will be added to this StrArray
-     * @return true if ALL the Strings in the given StrArray were added successfully
-     * @return false if at least one of the Strings in the given StrArray were NOT added successfully
-     */
-    bool addAll(StrArray *a) {
-
-        if (typeid(a->arr[0]) == typeid(arr[0])) {
-            String** newarr = new String*[(len + a->len) * 2];
-            for (int i = 0; i < len;i++) {
-                String* o = arr[i];
-                newarr[i] = o;
-            }
-            for (int i = 0; i < a->len;i++) {
-                String* o = a->arr[i];
-                newarr[i+len] = o;
-            }
-            len += a->len;
-            theoretical_len = (len + a->len) * 2;
-            delete [] arr;
-            arr = newarr;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * @brief Adds all Strings from a given StrArray at the given index in this StrArray, if the Strings in that StrArray are of the same type
-     * as the Strings in this StrArray
-     *
-     * @note Pushes the elements at and after @param index down to the end by one index
-     *
-     * @param a the StrArray whose Strings will be added to this StrArray
-     * @param index the index at which the Strings in the given StrArray are to be added
-     * @return true if all the Strings in the given StrArray were added successfully
-     * @return false if at least one of the Strings in the given StrArray were NOT added successfully
-     */
-    bool addAll(StrArray *a, size_t index) {
-        if (typeid(a->arr[0]) == typeid(arr[0])) {
-            String** newarr = new String*[(len + a->len) * 2];
-            for (int i = 0; i < index;i++) {
-                if (len > 0) {
-                    String* o = arr[i];
-                    newarr[i] = o;
-                }
-            }
-            for (int i = 0; i < a->len;i++) {
-                if (a->len > 0) {
-                    String* o = a->arr[i];
-                    newarr[i+index] = o;
-                }
-            }
-            for (int i = index; i < len;i++) {
-                if (len > 0) {
-                    String* o = arr[i];
-                    newarr[i+a->len] = o;
-                }
-            }
-            len += a->len;
-            theoretical_len = (len + a->len) * 2;
-            delete [] arr;
-            arr = newarr;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * @brief Removes all Strings from this StrArray
-     */
-    void clear() {
-        delete [] arr;
-        arr=new String*[10];
-        len = 0;
-        theoretical_len = 10;
-    }
 
     /**
      * @brief Checks that the given String is equal to this StrArray, meaning the given String is an StrArray, and that
@@ -468,26 +373,7 @@ public:
      * @return false if any of the above conditions are not satisfied
      */
     bool equals(Object *o) {
-        if (o == nullptr) {
-            return false;
-        }
-        StrArray* arr1 = dynamic_cast<StrArray*> (o);
-        if (arr1 != nullptr) {
-            if (arr1->len == this->len) {
-                bool isStrArray = true;
-                for (int i = 0; i < arr1->len;i++) {
-                    if (arr1->arr[i]->equals(arr[i]) == false) {
-                        isStrArray = false;
-                        break;
-                    }
-                }
-                return isStrArray;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
+        assert(false);
     }
 
     /**
@@ -506,7 +392,7 @@ public:
      * @return size_t the hashcode for this StrArray
      */
     size_t hash() {
-        return reinterpret_cast<size_t>(this);
+        assert(false);
     }
 
     /**
@@ -560,28 +446,11 @@ public:
     }
 
     /**
-     * @brief Gets the number of elements in this StrArray
      *
      * @return size_t the number of elements in this StrArray
      */
     size_t size() {
         return len;
-    }
-    
-    
-    char* serialize() {
-        size_t total = 0;
-        char** list = new char*[this->len];   
-        for(size_t i = 0; i < this->len; i++) {
-            total += this->get(i)->size_;
-            list[i] = this->get(i)->cstr_;
-        }
-        char* buf = new char[total + this->len];
-        for(size_t i = 0; i < this->len; i++) {
-            strcat(buf, list[i]);
-            strcat(buf, " ");
-        }
-        return buf;
     }
 };
 
@@ -590,7 +459,7 @@ class IntArray : public Object
 public:
     int* arr;
     size_t len;
-    size_t theoretical_len;
+    size_t capacity_;
     /**
      * @brief Construct a new IntArray int
      *
@@ -598,7 +467,7 @@ public:
     IntArray() : Object() {
         arr=new int[10];
         len = 0;
-        theoretical_len = 10;
+        capacity_ = 10;
     }
 
     /**
@@ -607,6 +476,17 @@ public:
      */
     ~IntArray() {
         clear();
+    }
+
+    IntArray (Deserializer &dser) {
+        len = dser.read_size_t();
+        arr = dser.read_int_arr(len);
+        capacity_ = len;
+    }
+
+    void serialize(Serializer &ser) {
+        ser.write_size_t(len);
+        ser.write_intarr(arr,len);
     }
 
     /** @brief Adds a given int to the end of the IntArray
@@ -620,8 +500,8 @@ public:
 
             return false;
         } else {
-            if (len >= theoretical_len) {
-                int * newarr = new int[theoretical_len * 2];
+            if (len >= capacity_) {
+                int * newarr = new int[capacity_ * 2];
                 for (int i = 0; i < len;i++) {
                     newarr[i] = arr[i];
                 }
@@ -629,7 +509,7 @@ public:
                 delete [] this->arr;
                 arr = newarr;
                 len += 1;
-                theoretical_len = theoretical_len * 2;
+                capacity_ = capacity_ * 2;
                 return true;
             } else {
                 arr[len] = o;
@@ -651,7 +531,7 @@ public:
      */
     bool add(int o, size_t index) {
         if (typeid(o)==(typeid(arr[0])) == true) {
-            int *newarr = new int [theoretical_len * 2];
+            int *newarr = new int [capacity_ * 2];
             for (int i = 0; i < index; i++) {
                 newarr[i] = arr[i];
             }
@@ -662,7 +542,7 @@ public:
             delete[] arr;
             arr = newarr;
             len += 1;
-            theoretical_len *= 2;
+            capacity_ *= 2;
             return true;
         } else {
             return false;
@@ -689,7 +569,7 @@ public:
                 newarr[i+len] = o;
             }
             len += a->len;
-            theoretical_len = (len + a->len) * 2;
+            capacity_ = (len + a->len) * 2;
             delete [] arr;
             arr = newarr;
             return true;
@@ -731,7 +611,7 @@ public:
                 }
             }
             len += a->len;
-            theoretical_len = (len + a->len) * 2;
+            capacity_ = (len + a->len) * 2;
             delete [] arr;
             arr = newarr;
             return true;
@@ -747,7 +627,7 @@ public:
         delete [] arr;
         arr=new int[10];
         len = 0;
-        theoretical_len = 10;
+        capacity_ = 10;
     }
 
     /**
@@ -870,7 +750,7 @@ class FloatArray : public Object
 public:
     float* arr;
     size_t len;
-    size_t theoretical_len;
+    size_t capacity_;
     /**
      * @brief Construct a new FloatArray float
      *
@@ -878,7 +758,7 @@ public:
     FloatArray() : Object() {
         arr=new float[10];
         len = 0;
-        theoretical_len = 10;
+        capacity_ = 10;
     }
 
     /**
@@ -887,6 +767,17 @@ public:
      */
     ~FloatArray() {
         clear();
+    }
+
+    FloatArray (Deserializer &dser) {
+        len = dser.read_size_t();
+        arr = dser.read_float_arr(len);
+        capacity_ = len;
+    }
+
+    void serialize(Serializer &ser) {
+        ser.write_size_t(len);
+        ser.write_floatarr(arr,len);
     }
 
     /** @brief Adds a given float to the end of the FloatArray
@@ -900,8 +791,8 @@ public:
 
             return false;
         } else {
-            if (len >= theoretical_len) {
-                float * newarr = new float[theoretical_len * 2];
+            if (len >= capacity_) {
+                float * newarr = new float[capacity_ * 2];
                 for (int i = 0; i < len;i++) {
                     newarr[i] = arr[i];
                 }
@@ -909,7 +800,7 @@ public:
                 delete [] this->arr;
                 arr = newarr;
                 len += 1;
-                theoretical_len = theoretical_len * 2;
+                capacity_ = capacity_ * 2;
                 return true;
             } else {
                 arr[len] = o;
@@ -931,7 +822,7 @@ public:
      */
     bool add(float o, size_t index) {
         if (typeid(o)==(typeid(arr[0])) == true) {
-            float *newarr = new float [theoretical_len * 2];
+            float *newarr = new float [capacity_ * 2];
             for (int i = 0; i < index; i++) {
                 newarr[i] = arr[i];
             }
@@ -942,7 +833,7 @@ public:
             delete[] arr;
             arr = newarr;
             len += 1;
-            theoretical_len *= 2;
+            capacity_ *= 2;
             return true;
         } else {
             return false;
@@ -969,7 +860,7 @@ public:
                 newarr[i+len] = o;
             }
             len += a->len;
-            theoretical_len = (len + a->len) * 2;
+            capacity_ = (len + a->len) * 2;
             delete [] arr;
             arr = newarr;
             return true;
@@ -1011,7 +902,7 @@ public:
                 }
             }
             len += a->len;
-            theoretical_len = (len + a->len) * 2;
+            capacity_ = (len + a->len) * 2;
             delete [] arr;
             arr = newarr;
             return true;
@@ -1027,7 +918,7 @@ public:
         delete [] arr;
         arr=new float[10];
         len = 0;
-        theoretical_len = 10;
+        capacity_ = 10;
     }
 
     /**
@@ -1143,6 +1034,8 @@ public:
     size_t size() {
         return len;
     }
+
+
 };
 
 class BoolArray : public Object
@@ -1150,7 +1043,7 @@ class BoolArray : public Object
 public:
     bool* arr;
     size_t len;
-    size_t theoretical_len;
+    size_t capacity_;
     /**
      * @brief Construct a new BoolArray bool
      *
@@ -1158,7 +1051,7 @@ public:
     BoolArray() : Object() {
         arr=new bool[10];
         len = 0;
-        theoretical_len = 10;
+        capacity_ = 10;
     }
 
     /**
@@ -1167,6 +1060,17 @@ public:
      */
     ~BoolArray() {
         clear();
+    }
+
+    BoolArray (Deserializer &dser) {
+        len = dser.read_size_t();
+        arr = dser.read_bool_arr(len);
+        capacity_ = len;
+    }
+
+    void serialize(Serializer &ser) {
+        ser.write_size_t(len);
+        ser.write_boolarr(arr,len);
     }
 
     /** @brief Adds a given bool to the end of the BoolArray
@@ -1180,8 +1084,8 @@ public:
 
             return false;
         } else {
-            if (len >= theoretical_len) {
-                bool * newarr = new bool[theoretical_len * 2];
+            if (len >= capacity_) {
+                bool * newarr = new bool[capacity_ * 2];
                 for (int i = 0; i < len;i++) {
                     newarr[i] = arr[i];
                 }
@@ -1189,7 +1093,7 @@ public:
                 delete [] this->arr;
                 arr = newarr;
                 len += 1;
-                theoretical_len = theoretical_len * 2;
+                capacity_ = capacity_ * 2;
                 return true;
             } else {
                 arr[len] = o;
@@ -1211,7 +1115,7 @@ public:
      */
     bool add(bool o, size_t index) {
         if (typeid(o)==(typeid(arr[0])) == true) {
-            bool *newarr = new bool [theoretical_len * 2];
+            bool *newarr = new bool [capacity_ * 2];
             for (int i= 0; i < index; i++) {
                 newarr[i] = arr[i];
             }
@@ -1222,7 +1126,7 @@ public:
             delete[] arr;
             arr = newarr;
             len += 1;
-            theoretical_len *= 2;
+            capacity_ *= 2;
             return true;
         } else {
             return false;
@@ -1249,7 +1153,7 @@ public:
                 newarr[i+len] = o;
             }
             len += a->len;
-            theoretical_len = (len + a->len) * 2;
+            capacity_ = (len + a->len) * 2;
             delete [] arr;
             arr = newarr;
             return true;
@@ -1291,7 +1195,7 @@ public:
                 }
             }
             len += a->len;
-            theoretical_len = (len + a->len) * 2;
+            capacity_ = (len + a->len) * 2;
             delete [] arr;
             arr = newarr;
             return true;
@@ -1307,7 +1211,7 @@ public:
         delete [] arr;
         arr=new bool[10];
         len = 0;
-        theoretical_len = 10;
+        capacity_ = 10;
     }
 
     /**
@@ -1431,7 +1335,7 @@ class DoubleArray : public Object
 public:
     double* arr;
     size_t len;
-    size_t theoretical_len;
+    size_t capacity_;
     /**
      * @brief Construct a new FloatArray float
      *
@@ -1439,7 +1343,7 @@ public:
     DoubleArray() : Object() {
         arr=new double[10];
         len = 0;
-        theoretical_len = 10;
+        capacity_ = 10;
     }
 
     /**
@@ -1448,6 +1352,17 @@ public:
      */
     ~DoubleArray() {
         clear();
+    }
+
+    DoubleArray (Deserializer &dser) {
+        len = dser.read_size_t();
+        arr = dser.read_double_arr(len);
+        capacity_ = len;
+    }
+
+    void serialize(Serializer &ser) {
+        ser.write_size_t(len);
+        ser.write_doublearr(arr,len);
     }
 
     /** @brief Adds a given float to the end of the FloatArray
@@ -1461,9 +1376,9 @@ public:
 
             return false;
         } else {
-            if (len >= theoretical_len) {
+            if (len >= capacity_) {
                 double * newarr = 
-                new double[theoretical_len * 2];
+                new double[capacity_ * 2];
                 for (int i = 0; i < len;i++) {
                     newarr[i] = arr[i];
                 }
@@ -1471,7 +1386,7 @@ public:
                 delete [] this->arr;
                 arr = newarr;
                 len += 1;
-                theoretical_len = theoretical_len * 2;
+                capacity_ = capacity_ * 2;
                 return true;
             } else {
                 arr[len] = o;
@@ -1493,7 +1408,7 @@ public:
      */
     bool add(double o, size_t index) {
         if (typeid(o)==(typeid(arr[0])) == true) {
-            double *newarr = new double [theoretical_len * 2];
+            double *newarr = new double [capacity_ * 2];
             for (int i = 0; i < index; i++) {
                 newarr[i] = arr[i];
             }
@@ -1504,7 +1419,7 @@ public:
             delete[] arr;
             arr = newarr;
             len += 1;
-            theoretical_len *= 2;
+            capacity_ *= 2;
             return true;
         } else {
             return false;
@@ -1531,7 +1446,7 @@ public:
                 newarr[i+len] = o;
             }
             len += a->len;
-            theoretical_len = (len + a->len) * 2;
+            capacity_ = (len + a->len) * 2;
             delete [] arr;
             arr = newarr;
             return true;
@@ -1573,7 +1488,7 @@ public:
                 }
             }
             len += a->len;
-            theoretical_len = (len + a->len) * 2;
+            capacity_ = (len + a->len) * 2;
             delete [] arr;
             arr = newarr;
             return true;
@@ -1589,7 +1504,7 @@ public:
         delete [] arr;
         arr=new double[10];
         len = 0;
-        theoretical_len = 10;
+        capacity_ = 10;
     }
 
     /**
@@ -1704,22 +1619,5 @@ public:
      */
     size_t size() {
         return len;
-    }
-    
-    char* serialize() {
-        size_t total = 0;
-        char** list = new char*[this->len];
-        for(size_t i = 0; i < this->len; i++) {
-                total += 8;
-                double d = this->get(i);
-                list[i] = 
-                reinterpret_cast<char*>(&d);
-        }
-        char* buf = new char[total + this->len];
-        for(size_t i = 0; i < this->len; i++) {
-                strcat(buf, list[i]);
-                strcat(buf, " ");
-        }
-        return buf;
     }
 };

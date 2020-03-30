@@ -106,6 +106,13 @@ public:
         }
     }
 
+    double get_double(size_t col, size_t row) {
+        if(s.column_types[col] == 'D') {
+            DoubleColumn* i = data[col]->as_double();
+            return i->get(row);
+        }
+    }
+
     /** Set the value at the given column and row to the given value.
       * If the column is not  of the right type or the indices are out of
       * bound, the result is undefined. */
@@ -194,5 +201,14 @@ public:
             }
             std::cout << "\n";
         }
+    }
+
+    void serialize(Serializer &ser) {
+            ser.write_size_t(num);
+            ser.write_size_t(cap);
+            s.serialize(ser);
+            for (int i = 0; i < s.column_num;i++) {
+                data[i].serialize(ser);
+            }
     }
 };

@@ -4,6 +4,7 @@
 #include "string.h"
 #include "object.h"
 #include "helper.h"
+#include "serial.h"
 #include <iostream>
 #pragma once
 
@@ -52,6 +53,22 @@ class Schema : public Object {
 		  add_column(types[i]);
 	  }
   }
+
+  Schema(Deserializer dser) {
+      column_num = dser.read_size_t();
+      row_num = dser.read_size_t();
+      column_cap = dser.read_size_t();
+      row_cap = dser.read_size_t();
+      column_types = dser.read_chars(column_num);
+  }
+
+    void serialize(Serializer &ser) {
+        ser.write_size_t(column_num);
+        ser.write_size_t(row_num);
+        ser.write_size_t(column_cap);
+        ser.write_size_t(row_cap);
+        ser.write_chars(column_types,column_num);
+    }
  
   /** Add a column of the given type and name (can be nullptr), name
     * is external. Names are expectd to be unique, duplicates result
@@ -76,6 +93,10 @@ class Schema : public Object {
                   column_types[column_num] = *"F";
                   column_num ++;
           }
+      else if(typ == *"D") {
+          column_types[column_num] = *"D";
+          column_num ++;
+      }
   }
  
   /** Add a row with a name (possibly nullptr), name is external.  Names are
@@ -99,6 +120,6 @@ class Schema : public Object {
  
   /** The number of rows */
   size_t length() {
-	  return row_num;
+      return row_num;
   }
 };
