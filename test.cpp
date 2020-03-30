@@ -181,14 +181,7 @@ void test_schema_serialize() {
     s->serialize(s1);
     Deserializer d(s1.data_,s1.length_);
     Schema* s2 = new Schema(d);
-    printf("%s",s2->column_types);
+    printf("%s\n",s2->column_types);
 }
 
-void test_DataFrameSerialize() {
-    Schema* s = new Schema("SSSSSSSSSS");
-    Serializer s1;
-    s->serialize(s1);
-    Deserializer d(s1.data_,s1.length_);
-    Schema* s2 = new Schema(d);
-    printf("%s",s2->column_types);
-}
+

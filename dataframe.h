@@ -32,6 +32,29 @@ public:
         data = new Column*[num];
         memcpy(data, df.data, num);
     }
+    DataFrame(Deserializer d) {
+        num = d.read_size_t();
+        cap = d.read_size_t();
+        s = Schema(d);
+        data = new Column*[s.column_num];
+        for(size_t i = 0; i < s.column_num; i++) {
+            if(s.col_type(i) == 'S') {
+                data[i] = new StringColumn(d);
+            }
+            if(s.col_type(i) == 'B') {
+                data[i] = new BoolColumn(d);
+            }
+            if(s.col_type(i) == 'I') {
+                data[i] = new IntColumn(d);
+            }
+            if(s.col_type(i) == 'F') {
+                data[i] = new FloatColumn(d);
+            }
+            if(s.col_type(i) == 'D') {
+                data[i] = new DoubleColumn(d);
+            }
+        }
+    }
     /** Create a data frame from a schema and columns. All columns are created
       * empty. */
     DataFrame(Schema& schema):
