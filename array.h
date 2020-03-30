@@ -8,7 +8,6 @@
 #define SUBMISSION_ARRAY_H
 
 #endif //SUBMISSION_ARRAY_H
-#pragma once
 
 class Array : public Object
 {
@@ -93,7 +92,7 @@ public:
                 newarr[i] = arr[i];
             }
             newarr[index] = o;
-            for (int i = index; i < len; i++) {
+            for (size_t i = index; i < len; i++) {
                 newarr[i+1] = arr[i];
             }
             delete[] arr;
@@ -117,11 +116,11 @@ public:
 
         if (typeid(a->arr[0]) == typeid(arr[0])) {
             Object** newarr = new Object*[(len + a->len) * 2];
-            for (int i = 0; i < len;i++) {
+            for (size_t i = 0; i < len;i++) {
                 Object* o = arr[i];
                 newarr[i] = o;
             }
-            for (int i = 0; i < a->len;i++) {
+            for (size_t i = 0; i < a->len;i++) {
                 Object* o = a->arr[i];
                 newarr[i+len] = o;
             }
@@ -149,19 +148,19 @@ public:
     bool addAll(Array *a, size_t index) {
         if (typeid(a->arr[0]) == typeid(arr[0])) {
             Object** newarr = new Object*[(len + a->len) * 2];
-            for (int i = 0; i < index;i++) {
+            for (size_t i = 0; i < index;i++) {
                 if (len > 0) {
                     Object* o = arr[i];
                     newarr[i] = o;
                 }
             }
-            for (int i = 0; i < a->len;i++) {
+            for (size_t i = 0; i < a->len;i++) {
                 if (a->len > 0) {
                     Object* o = a->arr[i];
                     newarr[i+index] = o;
                 }
             }
-            for (int i = index; i < len;i++) {
+            for (size_t i = index; i < len;i++) {
                 if (len > 0) {
                     Object* o = arr[i];
                     newarr[i+a->len] = o;
@@ -208,7 +207,7 @@ public:
         if (arr1 != nullptr) {
             if (arr1->len == this->len) {
                 bool isarray = true;
-                for (int i = 0; i < arr1->len;i++) {
+                for (size_t i = 0; i < arr1->len;i++) {
                     if (arr1->arr[i]->equals(arr[i]) == false) {
                         isarray = false;
                         break;
@@ -252,7 +251,7 @@ public:
      */
     int indexOf(Object *o) {
         int x = -1;
-        for (int i = 0; i < len;i++) {
+        for (size_t i = 0; i < len;i++) {
             if (o->equals(arr[i])) {
                 x = i;
                 break;
@@ -271,7 +270,7 @@ public:
      */
     Object *remove(size_t index) {
         Object* o = arr[index];
-        for (int i = index; i < len;i++) {
+        for (size_t i = index; i < len;i++) {
             arr[i] = arr[i+1];
         }
         len -= 1;
@@ -358,6 +357,118 @@ public:
                 return true;
             }
         }
+    }
+
+    /**
+     * @brief Adds a given String to the given index of the StrArray
+     *
+     * @note Pushes the elements at and after @param index down to the end by one index
+     *
+     * @param o the String to be added to this StrArray
+     * @param index the index at which the given String is to be added
+     * @return true if the String was added successfully
+     * @return false if the String was NOT added successfully
+     */
+    bool add(String *o, size_t index) {
+        if ((typeid(o)==(typeid(arr[0]))) == true) {
+            String **newarr = new String *[theoretical_len * 2];
+            for (size_t i = 0; i < index; i++) {
+                newarr[i] = arr[i];
+            }
+            newarr[index] = o;
+            for (size_t i = index; i < len; i++) {
+                newarr[i+1] = arr[i];
+            }
+            delete[] arr;
+            arr = newarr;
+            len += 1;
+            theoretical_len *= 2;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @brief Adds all Strings from a given StrArray to the end of this StrArray
+     *
+     * @param a the StrArray whose Strings will be added to this StrArray
+     * @return true if ALL the Strings in the given StrArray were added successfully
+     * @return false if at least one of the Strings in the given StrArray were NOT added successfully
+     */
+    bool addAll(StrArray *a) {
+
+        if (typeid(a->arr[0]) == typeid(arr[0])) {
+            String** newarr = new String*[(len + a->len) * 2];
+            for (size_t i = 0; i < len;i++) {
+                String* o = arr[i];
+                newarr[i] = o;
+            }
+            for (size_t i = 0; i < a->len;i++) {
+                String* o = a->arr[i];
+                newarr[i+len] = o;
+            }
+            len += a->len;
+            theoretical_len = (len + a->len) * 2;
+            delete [] arr;
+            arr = newarr;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @brief Adds all Strings from a given StrArray at the given index in this StrArray, if the Strings in that StrArray are of the same type
+     * as the Strings in this StrArray
+     *
+     * @note Pushes the elements at and after @param index down to the end by one index
+     *
+     * @param a the StrArray whose Strings will be added to this StrArray
+     * @param index the index at which the Strings in the given StrArray are to be added
+     * @return true if all the Strings in the given StrArray were added successfully
+     * @return false if at least one of the Strings in the given StrArray were NOT added successfully
+     */
+    bool addAll(StrArray *a, size_t index) {
+        if (typeid(a->arr[0]) == typeid(arr[0])) {
+            String** newarr = new String*[(len + a->len) * 2];
+            for (size_t i = 0; i < index;i++) {
+                if (len > 0) {
+                    String* o = arr[i];
+                    newarr[i] = o;
+                }
+            }
+            for (size_t i = 0; i < a->len;i++) {
+                if (a->len > 0) {
+                    String* o = a->arr[i];
+                    newarr[i+index] = o;
+                }
+            }
+            for (size_t i = index; i < len;i++) {
+                if (len > 0) {
+                    String* o = arr[i];
+                    newarr[i+a->len] = o;
+                }
+            }
+            len += a->len;
+            theoretical_len = (len + a->len) * 2;
+            delete [] arr;
+            arr = newarr;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @brief Removes all Strings from this StrArray
+     */
+    void clear() {
+        delete [] arr;
+        arr=new String*[10];
+        len = 0;
+        theoretical_len = 10;
+    }
 
     /**
      * @brief Checks that the given String is equal to this StrArray, meaning the given String is an StrArray, and that
@@ -405,7 +516,7 @@ public:
      */
     int indexOf(String *o) {
         int x = -1;
-        for (int i = 0; i < len;i++) {
+        for (size_t i = 0; i < len;i++) {
             if (o->equals(arr[i])) {
                 x = i;
                 break;
@@ -424,7 +535,7 @@ public:
      */
     String *remove(size_t index) {
         String* o = arr[index];
-        for (int i = index; i < len;i++) {
+        for (size_t i = index; i < len;i++) {
             arr[i] = arr[i+1];
         }
         len -= 1;
@@ -452,7 +563,6 @@ public:
     size_t size() {
         return len;
     }
-};
 
 class IntArray : public Object
 {
@@ -536,7 +646,7 @@ public:
                 newarr[i] = arr[i];
             }
             newarr[index] = o;
-            for (int i = index; i < len; i++) {
+            for (size_t i = index; i < len; i++) {
                 newarr[i+1] = arr[i];
             }
             delete[] arr;
@@ -560,11 +670,11 @@ public:
 
         if (typeid(a->arr[0]) == typeid(arr[0])) {
             int* newarr = new int[(len + a->len) * 2];
-            for (int i = 0; i < len;i++) {
+            for (size_t i = 0; i < len;i++) {
                 int o = arr[i];
                 newarr[i] = o;
             }
-            for (int i = 0; i < a->len;i++) {
+            for (size_t i = 0; i < a->len;i++) {
                 int o = a->arr[i];
                 newarr[i+len] = o;
             }
@@ -592,19 +702,19 @@ public:
     bool addAll(IntArray *a, size_t index) {
         if (typeid(a->arr[0]) == typeid(arr[0])) {
             int* newarr = new int[(len + a->len) * 2];
-            for (int i = 0; i < index;i++) {
+            for (size_t i = 0; i < index;i++) {
                 if (len > 0) {
                     int o = arr[i];
                     newarr[i] = o;
                 }
             }
-            for (int i = 0; i < a->len;i++) {
+            for (size_t i = 0; i < a->len;i++) {
                 if (a->len > 0) {
                     int o = a->arr[i];
                     newarr[i+index] = o;
                 }
             }
-            for (int i = index; i < len;i++) {
+            for (size_t i = index; i < len;i++) {
                 if (len > 0) {
                     int o = arr[i];
                     newarr[i+a->len] = o;
@@ -651,8 +761,8 @@ public:
         if (arr1 != nullptr) {
             if (arr1->len == this->len) {
                 bool isIntArray = true;
-                for (int i = 0; i < arr1->len;i++) {
-                    if (arr1->arr[i]==arr[i] == false) {
+                for (size_t i = 0; i < arr1->len;i++) {
+                    if ((arr1->arr[i]==arr[i]) == false) {
                         isIntArray = false;
                         break;
                     }
@@ -695,7 +805,7 @@ public:
      */
     int indexOf(int o) {
         int x = -1;
-        for (int i = 0; i < len;i++) {
+        for (size_t i = 0; i < len;i++) {
             if (o==arr[i]) {
                 x = i;
                 break;
@@ -714,7 +824,7 @@ public:
      */
     int remove(size_t index) {
         int o = arr[index];
-        for (int i = index; i < len;i++) {
+        for (size_t i = index; i < len;i++) {
             arr[i] = arr[i+1];
         }
         len -= 1;
@@ -827,7 +937,7 @@ public:
                 newarr[i] = arr[i];
             }
             newarr[index] = o;
-            for (int i = index; i < len; i++) {
+            for (size_t i = index; i < len; i++) {
                 newarr[i+1] = arr[i];
             }
             delete[] arr;
@@ -851,11 +961,11 @@ public:
 
         if (typeid(a->arr[0]) == typeid(arr[0])) {
             float* newarr = new float[(len + a->len) * 2];
-            for (int i = 0; i < len;i++) {
+            for (size_t i = 0; i < len;i++) {
                 float o = arr[i];
                 newarr[i] = o;
             }
-            for (int i = 0; i < a->len;i++) {
+            for (size_t i = 0; i < a->len;i++) {
                 float o = a->arr[i];
                 newarr[i+len] = o;
             }
@@ -883,19 +993,19 @@ public:
     bool addAll(FloatArray *a, size_t index) {
         if (typeid(a->arr[0]) == typeid(arr[0])) {
             float* newarr = new float[(len + a->len) * 2];
-            for (int i = 0; i < index;i++) {
+            for (size_t i = 0; i < index;i++) {
                 if (len > 0) {
                     float o = arr[i];
                     newarr[i] = o;
                 }
             }
-            for (int i = 0; i < a->len;i++) {
+            for (size_t i = 0; i < a->len;i++) {
                 if (a->len > 0) {
                     float o = a->arr[i];
                     newarr[i+index] = o;
                 }
             }
-            for (int i = index; i < len;i++) {
+            for (size_t i = index; i < len;i++) {
                 if (len > 0) {
                     float o = arr[i];
                     newarr[i+a->len] = o;
@@ -942,8 +1052,8 @@ public:
         if (arr1 != nullptr) {
             if (arr1->len == this->len) {
                 bool isFloatArray = true;
-                for (int i = 0; i < arr1->len;i++) {
-                    if (arr1->arr[i]==arr[i] == false) {
+                for (size_t i = 0; i < arr1->len;i++) {
+                    if ((arr1->arr[i]==arr[i]) == false) {
                         isFloatArray = false;
                         break;
                     }
@@ -986,7 +1096,7 @@ public:
      */
     int indexOf(float f) {
         int x = -1;
-        for (int i = 0; i < len;i++) {
+        for (size_t i = 0; i < len;i++) {
             if (f==arr[i]) {
                 x = i;
                 break;
@@ -1005,7 +1115,7 @@ public:
      */
     float remove(size_t index) {
         float o = arr[index];
-        for (int i = index; i < len;i++) {
+        for (size_t i = index; i < len;i++) {
             arr[i] = arr[i+1];
         }
         len -= 1;
@@ -1120,7 +1230,7 @@ public:
                 newarr[i] = arr[i];
             }
             newarr[index] = o;
-            for (int i= index; i < len; i++) {
+            for (size_t i= index; i < len; i++) {
                 newarr[i+1] = arr[i];
             }
             delete[] arr;
@@ -1144,11 +1254,11 @@ public:
 
         if (typeid(a->arr[0]) == typeid(arr[0])) {
             bool* newarr = new bool[(len + a->len) * 2];
-            for (int i= 0; i < len;i++) {
+            for (size_t i= 0; i < len;i++) {
                 bool o = arr[i];
                 newarr[i] = o;
             }
-            for (int i= 0; i < a->len;i++) {
+            for (size_t i= 0; i < a->len;i++) {
                 bool o = a->arr[i];
                 newarr[i+len] = o;
             }
@@ -1176,19 +1286,19 @@ public:
     bool addAll(BoolArray *a, size_t index) {
         if (typeid(a->arr[0]) == typeid(arr[0])) {
             bool* newarr = new bool[(len + a->len) * 2];
-            for (int i= 0; i < index;i++) {
+            for (size_t i= 0; i < index;i++) {
                 if (len > 0) {
                     bool o = arr[i];
                     newarr[i] = o;
                 }
             }
-            for (int i= 0; i < a->len;i++) {
+            for (size_t i= 0; i < a->len;i++) {
                 if (a->len > 0) {
                     bool o = a->arr[i];
                     newarr[i+index] = o;
                 }
             }
-            for (int i= index; i < len;i++) {
+            for (size_t i= index; i < len;i++) {
                 if (len > 0) {
                     bool o = arr[i];
                     newarr[i+a->len] = o;
@@ -1235,8 +1345,8 @@ public:
         if (arr1 != nullptr) {
             if (arr1->len == this->len) {
                 bool isBoolArray = true;
-                for (int i= 0; i < arr1->len;i++) {
-                    if (arr1->arr[i]==arr[i] == false) {
+                for (size_t i= 0; i < arr1->len;i++) {
+                    if ((arr1->arr[i]==arr[i]) == false) {
                         isBoolArray = false;
                         break;
                     }
@@ -1279,7 +1389,7 @@ public:
      */
     bool indexOf(bool o) {
         bool x = -1;
-        for (int i= 0; i < len;i++) {
+        for (size_t i= 0; i < len;i++) {
             if (o==arr[i]) {
                 x = i;
                 break;
@@ -1298,7 +1408,7 @@ public:
      */
     bool remove(size_t index) {
         bool o = arr[index];
-        for (int i= index; i < len;i++) {
+        for (size_t i= index; i < len;i++) {
             arr[i] = arr[i+1];
         }
         len -= 1;
@@ -1377,7 +1487,7 @@ public:
             return false;
         } else {
             if (len >= capacity_) {
-                double * newarr = 
+                double * newarr =
                 new double[capacity_ * 2];
                 for (int i = 0; i < len;i++) {
                     newarr[i] = arr[i];
@@ -1413,7 +1523,7 @@ public:
                 newarr[i] = arr[i];
             }
             newarr[index] = o;
-            for (int i = index; i < len; i++) {
+            for (size_t i = index; i < len; i++) {
                 newarr[i+1] = arr[i];
             }
             delete[] arr;
@@ -1437,11 +1547,11 @@ public:
 
         if (typeid(a->arr[0]) == typeid(arr[0])) {
             double* newarr = new double[(len + a->len) * 2];
-            for (int i = 0; i < len;i++) {
+            for (size_t i = 0; i < len;i++) {
                 double o = arr[i];
                 newarr[i] = o;
             }
-            for (int i = 0; i < a->len;i++) {
+            for (size_t i = 0; i < a->len;i++) {
                 double o = a->arr[i];
                 newarr[i+len] = o;
             }
@@ -1469,19 +1579,19 @@ public:
     bool addAll(DoubleArray *a, size_t index) {
         if (typeid(a->arr[0]) == typeid(arr[0])) {
             double* newarr = new double[(len + a->len) * 2];
-            for (int i = 0; i < index;i++) {
+            for (size_t i = 0; i < index;i++) {
                 if (len > 0) {
                     double o = arr[i];
                     newarr[i] = o;
                 }
             }
-            for (int i = 0; i < a->len;i++) {
+            for (size_t i = 0; i < a->len;i++) {
                 if (a->len > 0) {
                     double o = a->arr[i];
                     newarr[i+index] = o;
                 }
             }
-            for (int i = index; i < len;i++) {
+            for (size_t i = index; i < len;i++) {
                 if (len > 0) {
                     double o = arr[i];
                     newarr[i+a->len] = o;
@@ -1528,8 +1638,8 @@ public:
         if (arr1 != nullptr) {
             if (arr1->len == this->len) {
                 bool isDoubleArray = true;
-                for (int i = 0; i < arr1->len;i++) {
-                    if (arr1->arr[i]==arr[i] == false) {
+                for (size_t i = 0; i < arr1->len;i++) {
+                    if ((arr1->arr[i]==arr[i]) == false) {
                         isDoubleArray = false;
                         break;
                     }
@@ -1572,7 +1682,7 @@ public:
      */
     int indexOf(double f) {
         int x = -1;
-        for (int i = 0; i < len;i++) {
+        for (size_t i = 0; i < len;i++) {
             if (f==arr[i]) {
                 x = i;
                 break;
@@ -1591,7 +1701,7 @@ public:
      */
     double remove(size_t index) {
         double o = arr[index];
-        for (int i = index; i < len;i++) {
+        for (size_t i = index; i < len;i++) {
             arr[i] = arr[i+1];
         }
         len -= 1;

@@ -14,7 +14,6 @@ public:
         data_ = new char[1024];
         cap_ = 1024;
     }
-
     void write_size_t(size_t v) {
         if (length_+ sizeof(size_t) > cap_) {
             char* newstr = new char[cap_ * 2];

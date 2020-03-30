@@ -46,6 +46,9 @@ class Row : public Object {
 		  else if (types[i] == 'F') {
                           data[i] = new FloatColumn();
                   }
+          else if (types[i] == 'D') {
+                          data[i] = new DoubleColumn();
+                  }
 	  }
   }
  
@@ -66,6 +69,12 @@ class Row : public Object {
   void set(size_t col, bool val) {
 	  if(types[col] == 'B') {
           data[col]->as_bool()->set(0, val);
+          }
+  }
+  
+  void set(size_t col, double val) {
+	  if(types[col] == 'D') {
+          data[col]->as_double()->set(0, val);
           }
   }
 
@@ -103,6 +112,12 @@ class Row : public Object {
   float get_float(size_t col) {
 	  if(types[col] == 'F') {
                   return data[col]->as_float()->get(0);
+          }
+  }
+  
+  double get_double(size_t col) {
+	  if(types[col] == 'D') {
+                  return data[col]->as_double()->get(0);
           }
   }
 
