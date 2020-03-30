@@ -1,4 +1,4 @@
-//#pragma once
+#pragma once
 #include "object.h"
 #include "string.h"
 //#include <unistd.h>
