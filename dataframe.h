@@ -59,6 +59,9 @@ public:
 		if(s.col_type(i) == 'F') {
                         data[i] = new FloatColumn();
                 }
+        if(s.col_type(i) == 'D') {
+            data[i] = new FloatColumn();
+        }
 	}
 	    }
 	      
@@ -150,6 +153,14 @@ public:
         }
     }
 
+    void set(size_t col, size_t row, String* val) {
+        if(col < s.column_num && data[col]->get_type() == 'D') {
+            if(row < s.row_num) {
+                data[col]->as_string()->set(row, val);
+            }
+        }
+    }
+
     /** Add a row at the end of this dataframe. The row is expected to have
      *  the right schema and be filled with values, otherwise undedined.  */
     void add_row(Row& row) {
@@ -161,6 +172,8 @@ public:
             } else if (data[i]->get_type() == 'B') {
                 data[i]->push_back(row.get_bool(i));
             } else if (data[i]->get_type() == 'F') {
+                data[i]->push_back(row.get_float(i));
+            } else if (data[i]->get_type() == 'D') {
                 data[i]->push_back(row.get_float(i));
             }
 	}
@@ -213,6 +226,10 @@ public:
 
                 }
                 else if (c->get_type() == 'F') {
+                    std::cout << c->as_float()->get(i) << " ";
+
+                }
+                else if (c->get_type() == 'D') {
                     std::cout << c->as_float()->get(i) << " ";
 
                 }
