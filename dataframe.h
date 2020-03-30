@@ -42,6 +42,7 @@ public:
         s.row_cap = schema.row_cap;
         s.column_types = new char(s.column_num);
         memcpy(s.column_types, schema.column_types, s.column_num);
+        data = new Column*[s.column_num];
 	for(size_t i = 0; i < s.column_num; i++) {
 		if(s.col_type(i) == 'S') {
 			data[i] = new StringColumn();
@@ -56,7 +57,7 @@ public:
                         data[i] = new FloatColumn();
                 }
         if(s.col_type(i) == 'D') {
-            data[i] = new FloatColumn();
+            data[i] = new DoubleColumn();
         }
 	}
 	    }
@@ -170,7 +171,7 @@ public:
             } else if (data[i]->get_type() == 'F') {
                 data[i]->push_back(row.get_float(i));
             } else if (data[i]->get_type() == 'D') {
-                data[i]->push_back(row.get_float(i));
+                data[i]->push_back(row.get_double(i));
             }
 	}
 	s.row_num++;
@@ -227,6 +228,13 @@ public:
             }
     }
 
+    static DataFrame* deserialize(Deserializer &dser) {
+        size_t s1 = dser.read_size_t();
+        size_t s2 = dser.read_size_t();
+
+
+    }
+
     static DataFrame* fromArray(Key* k, KV* kv, size_t num, double* vals) {
         Schema s("D");
         DataFrame* ret = new DataFrame(s);
@@ -244,7 +252,8 @@ public:
         kv->put(k, v);
         return ret;
     }
-    static DataFrame* fromScalar(Key* k, KV kv, double val) {
+
+    static DataFrame* fromScalar(Key* k, KV* kv, double val) {
         Schema s ("D");
         DataFrame* ret = new DataFrame(s);
         Row r(s);
@@ -254,7 +263,7 @@ public:
         ret->serialize(s1);
         char* buf = s1.data_;
         Value* v = new Value(buf);
-        kv.put(k, v);
+        kv->put(k, v);
         return ret;
     }
 };

@@ -1,4 +1,3 @@
-#include <unistd.h>
 #include <assert.h>
 #include "serial.h"
 #include "dataframe.h"
@@ -6,7 +5,7 @@
 
 
 void test_kvstore() {
-    size_t SZ = 10;
+    size_t SZ = 1000*1000;
     double* vals = new double[SZ];
     double sum = 0;
     KV* kv = new KV();
@@ -15,12 +14,25 @@ void test_kvstore() {
     Key* key = new Key(s, 0);
     DataFrame* df = DataFrame::fromArray(key, kv, SZ, vals);
     assert(df->get_double(0,1) == 1);
-    Value* v = kv->get(key);
     delete df; 
+    std::cout << "fromArray pass" << "\n";
 }
+
+void test_kvstore2() {
+    double val = 10;
+    KV* kv = new KV();
+    String* s = new String("verif");
+    Key* key = new Key(s, 0);
+    DataFrame* df = DataFrame::fromScalar(key, kv, val);
+    assert(df->get_double(0,1) == 1000*1000);
+    delete df; 
+    std::cout << "fromScalar pass" << "\n";
+}
+
 
 int main(int argc, char** argv) {
 
     test_kvstore();
-    return 0;
+
+	return 0;
 }
