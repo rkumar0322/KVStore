@@ -1,4 +1,4 @@
-//#pragma once
+#pragma once
 // LANGUAGE: CwC
 #include <cassert>
 #include "object.h"
