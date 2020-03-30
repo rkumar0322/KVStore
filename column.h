@@ -1,6 +1,4 @@
 
-#include "string.h"
-#include "object.h"
 #include "helper.h"
 #include "array.h"
 #pragma once
@@ -9,7 +7,6 @@ class BoolColumn;
 class FloatColumn;
 class DoubleColumn;
 class StringColumn;
-class DoubleColumn;
 
 
 /**************************************************************************
@@ -37,9 +34,6 @@ public:
     virtual StringColumn* as_string() {
         return nullptr;
     }
-    virtual DoubleColumn* as_double() {
-        return nullptr;
-    }
 
     /** Type appropriate push_back methods. Calling the wrong method is
       * undefined behavior. **/
@@ -56,9 +50,6 @@ public:
         assert(0);
     }
     virtual void push_back(String* val) {
-        assert(0);
-    }
-    virtual void push_back(double val) {
         assert(0);
     }
 
@@ -191,36 +182,6 @@ public:
     }
     void serialize(Serializer &ser) {
         arr->serialize(ser);
-    }
-};
-
-class DoubleColumn : public Column {
-public:
-
-    DoubleArray* arr;
-
-    DoubleColumn() {
-        this->arr = new DoubleArray();
-    }
-    DoubleColumn(double n, ...) {
-
-    }
-    double get(size_t idx) {
-        return arr->get(idx);
-    }
-    DoubleColumn* as_double() {
-        return this;
-    }
-    /** Set value at idx. An out of bound idx is undefined.  */
-    void set(size_t idx, double val) {
-        arr->set(val,idx);
-    }
-    size_t size() {
-        return arr->size();
-    }
-
-    void push_back(double val) {
-        arr->add(val);
     }
 };
 

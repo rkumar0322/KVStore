@@ -4,10 +4,9 @@
 #include <iostream>
 #include <assert.h>
 #include <stdio.h>
-#include "string.h"
-#include "array.h"
 #include "serial.h"
-#include "column.h"
+#include "dataframe.h"
+
 
 void serialize_stringarr();
 void serialize_string();
@@ -19,6 +18,7 @@ void serialize_doubarr();
 void serialize_floatarr();
 void serialize_boolarr();
 void serialize_column();
+void test_schema_serialize();
 
 int main() {
     testwritesandreads();
@@ -155,24 +155,6 @@ void serialize_column() {
 
 }
 
-void serialize_column() {
-    DoubleColumn* s = new DoubleColumn();
-    double a = 1.0;
-    double b = 2.0;
-    double c = 3.0;
-    s->push_back(a);
-    s->push_back(b);
-    s->push_back(c);
-    Serializer ser;
-    s->serialize(ser);
-    Deserializer dser(ser.data_,ser.length_);
-    DoubleColumn* s2 = new DoubleColumn(dser);
-    printf("Val1: %f\n",s2->get(0));
-    printf("Val2: %f\n",s2->get(1));
-    printf("Val3: %f\n",s2->get(2));
-
-}
-
 
 void serialize_string() {
     String* s = new String("Rahul");
@@ -190,4 +172,11 @@ void testwritesandreads() {
     s.write_size_t(a);
     Deserializer d(s.data_,s.length_);
     printf("final size: %d\n",d.read_size_t());
+}
+void test_schema_serialize() {
+    Schema s = new Schema("SSSSSSSSSS");
+    Serializer s1;
+    s.serialize(s1);
+    Deserializer d(s.data_,s.length_);
+    Schema s = new Schema(d);
 }
