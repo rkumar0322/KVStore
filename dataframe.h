@@ -227,7 +227,7 @@ public:
             }
     }
 
-    static DataFrame* fromArray(Key& k, KV& kv, size_t num, double* vals) {
+    static DataFrame* fromArray(Key* k, KV* kv, size_t num, double* vals) {
         Schema s("D");
         DataFrame* ret = new DataFrame(s);
         Row r(s);
@@ -241,7 +241,7 @@ public:
         ret->serialize(s1);
         char* buf = s1.data_;
         Value* v = new Value(buf);
-        kv.put(&k, v);
+        kv->put(k, v);
         return ret;
     }
     static DataFrame* fromScalar(Key* k, KV kv, double val) {

@@ -1,8 +1,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include "serial.h"
-#include "array.h"
-#include "message.h"
 #include "dataframe.h"
 #include "kvstore.h"
 
