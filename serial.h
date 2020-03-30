@@ -1,5 +1,6 @@
 #include <iostream>
 #include <assert.h>
+#include <cstring>
 #include <stdio.h>
 #pragma once
 
