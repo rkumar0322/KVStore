@@ -1,6 +1,11 @@
 //
 // Created by Rahul Kumar on 2/13/20.
 //
+
+#ifndef KVSTORE_DATAFRAME_H
+#define KVSTORE_DATAFRAME_H
+
+class KDStore;
 #include "schema.h"
 #include "column.h"
 #include "row.h"
@@ -32,6 +37,36 @@ public:
         data = new Column*[num];
         memcpy(data, df.data, num);
     }
+    /** Create a data frame from a schema and columns. All columns are created
+      * empty. */
+    DataFrame(Schema& schema):
+            Object(schema) {
+        s.column_num = schema.column_num;
+        s.row_num = schema.row_num;
+        s.column_cap = schema.column_cap;
+        s.row_cap = schema.row_cap;
+        s.column_types = new char(s.column_num);
+        memcpy(s.column_types, schema.column_types, s.column_num);
+        data = new Column*[s.column_num];
+	    for(size_t i = 0; i < s.column_num; i++) {
+		    if(s.col_type(i) == 'S') {
+			    data[i] = new StringColumn();
+		    }
+		    if(s.col_type(i) == 'B') {
+		        data[i] = new BoolColumn();
+		    }
+		    if(s.col_type(i) == 'I') {
+		        data[i] = new IntColumn();
+		    }
+		    if(s.col_type(i) == 'F') {
+		        data[i] = new FloatColumn();
+		    }
+            if(s.col_type(i) == 'D') {
+                data[i] = new DoubleColumn();
+            }
+	    }
+    }
+
     DataFrame(Deserializer d) {
         num = d.read_size_t();
         cap = d.read_size_t();
@@ -55,35 +90,16 @@ public:
             }
         }
     }
-    /** Create a data frame from a schema and columns. All columns are created
-      * empty. */
-    DataFrame(Schema& schema):
-            Object(schema) {
-        s.column_num = schema.column_num;
-        s.row_num = schema.row_num;
-        s.column_cap = schema.column_cap;
-        s.row_cap = schema.row_cap;
-        s.column_types = new char(s.column_num);
-        memcpy(s.column_types, schema.column_types, s.column_num);
-        data = new Column*[s.column_num];
-	for(size_t i = 0; i < s.column_num; i++) {
-		if(s.col_type(i) == 'S') {
-			data[i] = new StringColumn();
-		}
-		if(s.col_type(i) == 'B') {
-                        data[i] = new BoolColumn();
-                }
-		if(s.col_type(i) == 'I') {
-                        data[i] = new IntColumn();
-                }
-		if(s.col_type(i) == 'F') {
-                        data[i] = new FloatColumn();
-                }
-        if(s.col_type(i) == 'D') {
-            data[i] = new DoubleColumn();
+
+    /** Serialize a dataframe into a serialzier*/
+    void serialize(Serializer &ser) {
+        ser.write_size_t(num);
+        ser.write_size_t(cap);
+        s.serialize(ser);
+        for (int i = 0; i < s.column_num;i++) {
+            data[i]->serialize(ser);
         }
-	}
-	    }
+    }
 	      
     /** Returns the dataframe's schema. Modifying the schema after a dataframe
       * has been created in undefined. */
@@ -197,7 +213,8 @@ public:
                 data[i]->push_back(row.get_double(i));
             }
 	}
-	s.row_num++;
+	    s.row_num++;
+        num++;
     }
     
     /** The number of rows in the dataframe. */
@@ -241,50 +258,8 @@ public:
             std::cout << "\n";
         }
     }
-
-    /** Serialize a dataframe into a serialzier*/
-    void serialize(Serializer &ser) {
-            ser.write_size_t(num);
-            ser.write_size_t(cap);
-            s.serialize(ser);
-            for (int i = 0; i < s.column_num;i++) {
-                data[i]->serialize(ser);
-            }
-    }
-
-    /** Read a list of doubles into a dataframe, and store that dataframe in a kvstore
-    	@return the dataframe of doubles*/
-    static DataFrame* fromArray(Key* k, KV* kv, size_t num, double* vals) {
-        Schema s("D");
-        DataFrame* ret = new DataFrame(s);
-        Row r(s);
-        DoubleArray* da = new DoubleArray();
-        for(size_t i = 0; i < num; i++) {
-            da->add(vals[i]);
-            r.set(0, vals[i]);
-            ret->add_row(r);
-        }
-        Serializer s1;
-        ret->serialize(s1);
-        char* buf = s1.data_;
-        Value* v = new Value(buf);
-        kv->put(k, v);
-        return ret;
-    }
-
-    /** Read a double into a dataframe with a single column, and store that dataframe in a kvstore
-    	@return the dataframe of doubles*/
-    static DataFrame* fromScalar(Key* k, KV* kv, double val) {
-        Schema s ("D");
-        DataFrame* ret = new DataFrame(s);
-        Row r(s);
-        r.set(0, val);
-        ret->add_row(r);
-        Serializer s1;
-        ret->serialize(s1);
-        char* buf = s1.data_;
-        Value* v = new Value(buf);
-        kv->put(k, v);
-        return ret;
-    }
+    static DataFrame* fromArray(Key* k, KDStore* kv, size_t num, double* vals);
+    static DataFrame* fromScalar(Key* k, KDStore* kv, double val);
 };
+
+#endif KVSTORE_DATAFRAME_H

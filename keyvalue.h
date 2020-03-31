@@ -34,6 +34,7 @@ class Key: public Object {
 class Value: public Object {
 	public:
 		char* val_;
+		size_t size_;
 
 		/**Constructor*/
 		Value() {
@@ -44,6 +45,11 @@ class Value: public Object {
 		Value(const char* buf) {
 			val_ = new char[strlen(buf)];
 			memcpy(val_, buf, strlen(buf));
+		}
+
+		Value(Serializer ser) {
+		    val_ = ser.data_;
+		    size_ = ser.length_;
 		}
 
 		/**Deconstructor*/

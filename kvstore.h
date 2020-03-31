@@ -23,16 +23,17 @@ public:
     }
 
     /**Get the value of the given key*/
-    Value* get(Key* k) {
+    virtual Object* get(Key* k) {
         return map_->get(k);
     }
    
-    Value* waitAndGet(Key* k) {
+    virtual Object* waitAndGet(Key* k) {
         return map_->get(k);
     }
 
     /**Insert the key-value pair*/
-    void put(Key* k, Value* v) {
-        map_->put(k, v);
+    virtual void put(Key* k, Object* v) {
+        Value* v1 = dynamic_cast<Value*>(v);
+        map_->put(k, v1);
     }
 };
