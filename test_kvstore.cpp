@@ -45,7 +45,7 @@ void test_DataFrameSerialize() {
     DataFrame* df2 = new DataFrame(d);
     assert(df2->get_double(0,1) == 1000*1000);
     delete df2;
-    std::cout << "fromArray pass" << "\n";
+    std::cout << "Serialize/deserialize Dataframe pass" << "\n";
 }
 
 int main(int argc, char** argv) {
