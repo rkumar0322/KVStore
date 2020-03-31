@@ -40,6 +40,8 @@ void test_DataFrameSerialize() {
     Key* key = new Key(s, 0);
     DataFrame* df = DataFrame::fromArray(key, kv, SZ, vals);
     DataFrame* df2 = kv->get(key);
+    assert(df2->get_schema().column_types = df->get_schema().column_types);
+    assert(df2->num = df->num);
     assert(df2->get_double(0,1) == df->get_double(0,1));
     delete df2;
     std::cout << "Serialize/deserialize Dataframe pass" << "\n";

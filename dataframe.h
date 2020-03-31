@@ -27,14 +27,12 @@ public:
     Column** data; //array of pointer of columns
     Schema s;      //schema of the dataframe
     size_t num;    //current number of columns
-    size_t cap;    //current capacity of the "data" field
 
     /** Create a data frame with the same columns as the given df but with no rows or rownmaes */
     DataFrame(DataFrame& df):
             Object(df) {
         s = df.s;
         num = df.num;
-        cap = df.cap;
         data = new Column*[num];
         memcpy(data, df.data, num);
     }
@@ -70,7 +68,6 @@ public:
 
     DataFrame(Deserializer d) {
         num = d.read_size_t();
-        cap = d.read_size_t();
         s = Schema(d);
         data = new Column*[s.column_num];
         for(size_t i = 0; i < s.column_num; i++) {
@@ -95,7 +92,6 @@ public:
     /** Serialize a dataframe into a serialzier*/
     void serialize(Serializer &ser) {
         ser.write_size_t(num);
-        ser.write_size_t(cap);
         s.serialize(ser);
         for (int i = 0; i < s.column_num;i++) {
             data[i]->serialize(ser);
