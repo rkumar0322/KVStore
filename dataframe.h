@@ -12,7 +12,8 @@ class KDStore;
 #include "serial.h"
 #include <stdio.h>
 #include <thread>
-#include "kvstore.h"
+#include "keyvalue.h"
+#include "map.h"
 
 /****************************************************************************
  * DataFrame::

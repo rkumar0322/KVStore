@@ -6,15 +6,29 @@
 #define KVSTORE_KDSTORE_H
 
 #include "dataframe.h"
-#include "kvstore.h"
 #include "serial.h"
+#include "keyvalue.h"
+#include "map.h"
 
 class DataFrame;
 
-class KDStore : public KV {
+
+class KDStore : public Object {
 
 public:
-    KDStore():KV() {
+    Map* map_;
+    size_t len;
+    /*Constructor*/
+    KDStore() {
+        map_ = new Map();
+        len = 0;
+    }
+
+    /**Deconstructor*/
+    ~KDStore() {
+        delete[] map_->keys_;
+        delete[] map_->values_;
+        delete[] map_;
     }
 
     DataFrame* get(Key* k) {
