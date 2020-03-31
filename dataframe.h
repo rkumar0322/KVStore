@@ -242,6 +242,7 @@ public:
         }
     }
 
+    /** Serialize a dataframe into a serialzier*/
     void serialize(Serializer &ser) {
             ser.write_size_t(num);
             ser.write_size_t(cap);
@@ -251,13 +252,8 @@ public:
             }
     }
 
-    static DataFrame* deserialize(Deserializer &dser) {
-        size_t s1 = dser.read_size_t();
-        size_t s2 = dser.read_size_t();
-
-
-    }
-
+    /** Read a list of doubles into a dataframe, and store that dataframe in a kvstore
+    	@return the dataframe of doubles*/
     static DataFrame* fromArray(Key* k, KV* kv, size_t num, double* vals) {
         Schema s("D");
         DataFrame* ret = new DataFrame(s);
@@ -276,6 +272,8 @@ public:
         return ret;
     }
 
+    /** Read a double into a dataframe with a single column, and store that dataframe in a kvstore
+    	@return the dataframe of doubles*/
     static DataFrame* fromScalar(Key* k, KV* kv, double val) {
         Schema s ("D");
         DataFrame* ret = new DataFrame(s);
