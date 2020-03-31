@@ -2,9 +2,6 @@
 // Created by Rahul Kumar on 3/31/20.
 //
 
-#ifndef KVSTORE_KDSTORE_H
-#define KVSTORE_KDSTORE_H
-
 #include "dataframe.h"
 #include "serial.h"
 #include "keyvalue.h"
@@ -77,4 +74,3 @@ DataFrame* DataFrame::fromScalar(Key* k, KDStore* kv, double val) {
     kv->put(k, ret);
     return ret;
 }
-#endif KVSTORE_KDSTORE_H

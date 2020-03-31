@@ -2,8 +2,7 @@
 // Created by Rahul Kumar on 2/13/20.
 //
 
-#ifndef KVSTORE_DATAFRAME_H
-#define KVSTORE_DATAFRAME_H
+
 
 class KDStore;
 #include "schema.h"
@@ -111,6 +110,8 @@ public:
         if (col != nullptr) {
             data[s.column_num] = col;
             s.add_column(col->get_type());
+        } else {
+            exit(1);
         }
     }
     
@@ -120,6 +121,8 @@ public:
         if(s.column_types[col] == 'I') {
             IntColumn* i = data[col]->as_int();
             return i->get(row);
+        } else {
+            exit(1);
         }
     }
 
@@ -127,6 +130,8 @@ public:
         if(s.column_types[col] == 'B') {
             BoolColumn* i = data[col]->as_bool();
             return i->get(row);
+        } else {
+            exit(1);
         }
     }
 
@@ -134,6 +139,8 @@ public:
         if(s.column_types[col] == 'F') {
             FloatColumn* i = data[col]->as_float();
             return i->get(row);
+        } else {
+            exit(1);
         }
     }
 
@@ -141,6 +148,8 @@ public:
         if(s.column_types[col] == 'S') {
             StringColumn* i = data[col]->as_string();
             return i->get(row);
+        } else {
+            exit(1);
         }
     }
 
@@ -148,6 +157,8 @@ public:
         if(s.column_types[col] == 'D') {
             DoubleColumn* i = data[col]->as_double();
             return i->get(row);
+        } else {
+            exit(1);
         }
     }
 
@@ -159,6 +170,8 @@ public:
             if(row < s.row_num) {
                 data[col]->as_int()->set(row, val);
             }
+        } else {
+            exit(1);
         }
     }
 
@@ -167,6 +180,8 @@ public:
             if(row < s.row_num) {
                 data[col]->as_bool()->set(row, val);
             }
+        } else {
+            exit(1);
         }
     }
     
@@ -175,6 +190,8 @@ public:
             if(row < s.row_num) {
                 data[col]->as_float()->set(row, val);
             }
+        } else {
+            exit(1);
         }
     }
 
@@ -183,6 +200,8 @@ public:
             if(row < s.row_num) {
                 data[col]->as_string()->set(row, val);
             }
+        } else {
+            exit(1);
         }
     }
 
@@ -191,6 +210,8 @@ public:
             if(row < s.row_num) {
                 data[col]->as_double()->set(row, val);
             }
+        } else {
+            exit(1);
         }
     }
 
@@ -208,6 +229,8 @@ public:
                 data[i]->push_back(row.get_float(i));
             } else if (data[i]->get_type() == 'D') {
                 data[i]->push_back(row.get_double(i));
+            } else {
+                exit(1);
             }
 	}
 	    s.row_num++;
@@ -250,6 +273,8 @@ public:
                 else if (c->get_type() == 'D') {
                     std::cout << c->as_float()->get(i) << " ";
 
+                } else {
+                    exit(1);
                 }
             }
             std::cout << "\n";
@@ -258,5 +283,3 @@ public:
     static DataFrame* fromArray(Key* k, KDStore* kv, size_t num, double* vals);
     static DataFrame* fromScalar(Key* k, KDStore* kv, double val);
 };
-
-#endif KVSTORE_DATAFRAME_H

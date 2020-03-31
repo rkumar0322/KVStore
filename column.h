@@ -71,6 +71,8 @@ public:
             return 'F';
         } else if (this->as_double() != nullptr) {
             return 'D';
+        } else {
+            exit(1);
         }
     }
 };

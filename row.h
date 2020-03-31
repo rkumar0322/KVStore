@@ -101,30 +101,45 @@ class Row : public Object {
 	  if(types[col] == 'I') {
 		  return data[col]->as_int()->get(0);
           }
+      else {
+          exit(1);
+      }
   }
 
   bool get_bool(size_t col) {
 	  if(types[col] == 'B') {
                   return data[col]->as_bool()->get(0);
           }
+      else {
+          exit(1);
+      }
   }
 
   float get_float(size_t col) {
 	  if(types[col] == 'F') {
                   return data[col]->as_float()->get(0);
           }
+      else {
+          exit(1);
+      }
   }
   
   double get_double(size_t col) {
 	  if(types[col] == 'D') {
                   return data[col]->as_double()->get(0);
           }
+      else {
+          exit(1);
+      }
   }
 
   String* get_string(size_t col) {
 	  if(types[col] == 'S') {
                   return data[col]->as_string()->get(0);
           }
+      else {
+          exit(1);
+      }
   }
  
   /** Number of fields in the row. */
