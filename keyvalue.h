@@ -47,7 +47,7 @@ class Value: public Object {
 			memcpy(val_, buf, strlen(buf));
 		}
 
-		Value(Serializer ser) {
+		Value(Serializer &ser) {
 		    val_ = ser.data_;
 		    size_ = ser.length_;
 		}

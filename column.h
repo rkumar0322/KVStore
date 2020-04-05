@@ -169,7 +169,9 @@ public:
         return this;
     }
     DoubleColumn(Deserializer &dser) {
+
         arr = new DoubleArray(dser);
+
     }
     /** Set value at idx. An out of bound idx is undefined.  */
     void set(size_t idx, double val) {

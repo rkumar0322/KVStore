@@ -83,7 +83,7 @@ public:
     }
     void write_doublearr(double* v, size_t len) {
         if (length_+ (sizeof(double)*len) > cap_) {
-            char* newstr = new char[length_ * 2];
+            char* newstr = new char[length_ * sizeof(double)*len];
             memcpy(newstr,data_,length_);
             delete[] data_;
             data_ = newstr;
@@ -111,10 +111,17 @@ public:
     char* data_;
     size_t length_;
     size_t cap_len;
-    Deserializer(char* data, size_t length) {
+    Deserializer(char* data, size_t &length) {
         data_ = data;
         cap_len = length;
         length_ = 0;
+    }
+
+    Deserializer(Serializer &s) {
+        data_ = s.data_;
+        length_ = 0;
+        cap_len = s.length_;
+
     }
     size_t read_size_t() {
         size_t v;

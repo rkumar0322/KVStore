@@ -65,7 +65,7 @@ public:
 	    }
     }
 
-    DataFrame(Deserializer d) {
+    DataFrame(Deserializer &d) {
         num = d.read_size_t();
         s = Schema(d);
         data = new Column*[s.column_num];
@@ -83,7 +83,8 @@ public:
                 data[i] = new FloatColumn(d);
             }
             if(s.col_type(i) == 'D') {
-                data[i] = new DoubleColumn(d);
+                DoubleColumn* dc = new DoubleColumn(d);
+                data[i] = dc;
             }
         }
     }
@@ -92,8 +93,27 @@ public:
     void serialize(Serializer &ser) {
         ser.write_size_t(num);
         s.serialize(ser);
-        for (int i = 0; i < s.column_num;i++) {
-            data[i]->serialize(ser);
+        for(size_t i = 0; i < s.column_num; i++) {
+            if(s.col_type(i) == 'S') {
+                StringColumn* d = (StringColumn*)data[i];
+                d->serialize(ser);
+            }
+            if(s.col_type(i) == 'B') {
+                BoolColumn* d = (BoolColumn*)data[i];
+                d->serialize(ser);
+            }
+            if(s.col_type(i) == 'I') {
+                IntColumn* d = (IntColumn*)data[i];
+                d->serialize(ser);
+            }
+            if(s.col_type(i) == 'F') {
+                FloatColumn* d = (FloatColumn*)data[i];
+                d->serialize(ser);
+            }
+            if(s.col_type(i) == 'D') {
+                DoubleColumn* d = (DoubleColumn*)data[i];
+                d->serialize(ser);
+            }
         }
     }
 	      
@@ -155,7 +175,7 @@ public:
 
     double get_double(size_t col, size_t row) {
         if(s.column_types[col] == 'D') {
-            DoubleColumn* i = data[col]->as_double();
+            DoubleColumn* i = (DoubleColumn*)data[col];
             return i->get(row);
         } else {
             exit(1);

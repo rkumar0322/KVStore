@@ -53,7 +53,7 @@ class Schema : public Object {
 	  }
   }
 
-  Schema(Deserializer dser) {
+  Schema(Deserializer &dser) {
       column_num = dser.read_size_t();
       row_num = dser.read_size_t();
       column_cap = dser.read_size_t();
