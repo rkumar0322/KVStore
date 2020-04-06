@@ -12,9 +12,7 @@
 
 
 enum class MsgKind { Ack, Nack, Put,
-
                     Reply,  Get, WaitAndGet, Status,
-
                     Kill,   Register,  Directory };
 
  
@@ -114,10 +112,12 @@ class Status : public Message {
  
 
 class Register : public Message {
+public:
 
-    //struct sockaddr_in client;
-
+    struct sockaddr_in client;
     size_t port;
+
+    int sender() {return 0;}
 
    
 };
