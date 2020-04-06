@@ -2,7 +2,7 @@
 eau2 system is a distributed key-value store which stores key-value pairs. Every node in the networks keeps track of its own key value stores, and they are able to get access to other nodes inside the application. 
 
 # Architecture 
-- The application class is the user-level interface which will used for reading, storing, retrieving and writing data. 
+- The application class is the user-level interface which is used for reading, storing, retrieving and writing data. 
 
 # Implementation 
 ## Dataframe
