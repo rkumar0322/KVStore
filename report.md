@@ -24,11 +24,18 @@ eau2 system is a distributed key-value store which stores key-value pairs. Every
 - To create a DataFrame, assign it as the value of a key, and insert the keyvalue pair into a KDStore:
     
     size_t SZ = 1000*1000;
+    
     double* vals = new double[SZ];
+    
     double sum = 0;
+    
     KDStore* kv = new KDStore();
+    
     for (size_t i = 0; i < SZ; ++i) sum += vals[i] = i;
+    
     String* s = new String("triv");
+    
     Key* key = new Key(s, 0);
+    
     DataFrame* df = DataFrame::fromArray(key, kv, SZ, vals);
 
