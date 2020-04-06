@@ -29,13 +29,13 @@ public:
     }
 
     DataFrame* get(Key* k) {
-        Value* v = map_->get(k);
+        Value* v = (Value*)map_->get(k);
         Deserializer d(v->val_,v->size_);
         return new DataFrame(d);
     }
 
     DataFrame* waitandget(Key* k) {
-        Value* v = map_->get(k);
+        Value* v = (Value*)map_->get(k);
         Deserializer d(v->val_,v->size_);
         return new DataFrame(d);
     }

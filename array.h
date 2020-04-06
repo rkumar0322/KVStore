@@ -20,6 +20,12 @@ public:
         capacity_ = 10;
     }
 
+    Array(size_t cap) : Object() {
+        arr=new Object*[cap * 2];
+        len = cap;
+        capacity_ = cap * 2;
+    }
+
     ~Array() {
         delete[] arr;
     }
@@ -312,6 +318,12 @@ public:
         delete[] arr;
     }
 
+    StrArray(size_t cap) : Object() {
+        arr=new String*[cap * 2];
+        len = cap;
+        capacity_ = cap * 2;
+    }
+
     StrArray(Deserializer &ser) {
         len = ser.read_size_t();
         arr = new String*[len * 2];
@@ -573,6 +585,12 @@ public:
         arr=new int[10];
         len = 0;
         capacity_ = 10;
+    }
+
+    IntArray(size_t cap) : Object() {
+        arr=new int[cap * 2];
+        len = cap;
+        capacity_ = cap * 2;
     }
 
     /**
@@ -864,6 +882,12 @@ public:
         arr=new float[10];
         len = 0;
         capacity_ = 10;
+    }
+
+    FloatArray(size_t cap) : Object() {
+        arr=new float[cap * 2];
+        len = cap;
+        capacity_ = cap * 2;
     }
 
     /**
@@ -1159,6 +1183,12 @@ public:
         capacity_ = 10;
     }
 
+    BoolArray(size_t cap) : Object() {
+        arr=new bool[cap * 2];
+        len = cap;
+        capacity_ = cap * 2;
+    }
+
     /**
      * @brief Destroy the BoolArray bool
      *
@@ -1449,6 +1479,12 @@ public:
         arr=new double[10];
         len = 0;
         capacity_ = 10;
+    }
+
+    DoubleArray(size_t cap) : Object() {
+        arr=new double[cap * 2];
+        len = cap;
+        capacity_ = cap * 2;
     }
 
     /**
