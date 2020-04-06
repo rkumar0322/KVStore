@@ -104,6 +104,14 @@ public:
         length_ += len * sizeof(bool);
     }
 
+    char* build() {
+        return data_;
+    }
+
+    size_t size() {
+        return length_;
+    }
+
 };
 
 class Deserializer {

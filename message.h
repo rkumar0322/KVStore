@@ -28,6 +28,21 @@ class Message : public Object {
 
     size_t id_;     // an id t unique within the node
 
+    Message(Deserializer &d) {
+        sender_ = d.read_size_t();
+        target_ = d.read_size_t();
+        id_ = d.read_size_t();
+
+    }
+
+    Message() {
+
+    }
+
+    size_t target() {
+        return target_;
+    }
+
 };
 
  
@@ -117,6 +132,10 @@ public:
     struct sockaddr_in client;
     size_t port;
 
+    Register(unsigned idx, unsigned port) {
+        port = port;
+    }
+
     int sender() {return 0;}
 
    
@@ -144,6 +163,18 @@ class Directory : public Message {
         client = s4;
         ports = s5;
         addresses = s; 
+    }
+
+    Directory(size_t* ports, String** addresses1, size_t arr_addr) {
+        addresses = new StrArray();
+        addresses->arr = addresses1;
+        addresses->len = arr_addr;
+        addresses->capacity_ = arr_addr * 2;
+        ports = ports;
+    }
+
+    void log() {
+
     }
 
     /*

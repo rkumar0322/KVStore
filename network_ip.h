@@ -6,6 +6,9 @@
 #include "network_ifc.h"
 #include <cstdarg>
 #include <iostream>
+#include <exception>
+
+#define ARG 2
 
 class NodeInfo : public Object {
 public:
@@ -27,25 +30,25 @@ public:
         this_node_ = idx;
         assert(idx== 0 && "Serverm must be 0");
         init_sock_(port);
-        nodes_ = new NodeInfo[arg.num_nodes];
-        for (size_t i = 0; i < arg.num_nodes;++i) nodes_[i].id = 0;
+        nodes_ = new NodeInfo[ARG];
+        for (size_t i = 0; i < ARG;++i) nodes_[i].id = 0;
         nodes_[0].address = ip_;
         nodes_[0].id = 0;
-        for (size_t i = 2; i <= arg.num_nodes;++i) {
+        for (size_t i = 2; i <= ARG;++i) {
             Register* msg = dynamic_cast<Register*>(recv_m());
             nodes_[msg->sender()].id = msg->sender();
             nodes_[msg->sender()].address.sin_family = AF_INET;
             nodes_[msg->sender()].address.sin_addr = msg->client.sin_addr;
             nodes_[msg->sender()].address.sin_port = htons(msg->port);
         }
-        size_t* ports = new size_t[arg.num_nodes - 1];
-        String** addresses = new String*[arg.num_nodes - 1];
-        for (size_t i = 0; i < arg.num_nodes - 1;++i) {
+        size_t* ports = new size_t[ARG - 1];
+        String** addresses = new String*[ARG - 1];
+        for (size_t i = 0; i < ARG - 1;++i) {
             ports[i] = ntohs(nodes_[i+1].address.sin_port);
             addresses[i] = new String(inet_ntoa(nodes_[i+1].address.sin_addr));
         }
-        Directory ipd(ports.addresses);
-        for (int i = 1; i < arg.num_nodes;++i) {
+        Directory ipd(ports,addresses,ARG - 1);
+        for (int i = 1; i < ARG;++i) {
             ipd.target_ = i;
             send_m(&ipd);
         }
@@ -65,15 +68,14 @@ public:
         send_m(&msg);
         Directory* ipd = dynamic_cast<Directory*>(recv_m());
         ipd->log();
-        NodeInfo* nodes = new NodeInfo[arg.num_nodes];
+        NodeInfo* nodes = new NodeInfo[ARG];
         nodes[0] = nodes_[0];
         for(size_t i = 0; i < ipd->client;i++) {
             nodes[i+1].id = i+1;
-            nodes[i+1].address.sin_famiily = AF_INET;
+            nodes[i+1].address.sin_family = AF_INET;
             nodes[i+1].address.sin_port = htons(ipd->ports[i]);
-            if (inet_pton(AF_INET, ipd->addresses[i].c_str(),&nodes[i+1].address.sin_addr < 0) {
-                FATAL_ERRPR("Invalid IP Directory for node " <<(i+1));
-            }
+            assert(inet_pton(AF_INET, ipd->addresses[i].c_str(),&nodes[i+1].address.sin_addr) < 0 &&
+                "ERROR");
         }
         delete[] nodes_;
         nodes_ = nodes;
@@ -92,5 +94,33 @@ public:
         assert(listen(sock,100) >= 0);
     }
 
+    void send_m(Message* msg) override {
+        NodeInfo & tgt = nodes_[msg->target()];
+        int conn = socket(AF_INET, SOCK_STREAM, 0);
+        assert(conn >= 0 && "UNABLE to create client socket");
+        assert(connect(conn,(sockaddr*)&tgt.address, sizeof(tgt.address)) < 0 &&
+                "Unable to connect to remote node");
+        Serializer ser;
+        msg -> serialize(ser);
+        char* buf = ser.build();
+        size_t size = ser.size();
+        send(conn, &size, sizeof(size_t),0);
+        send(conn, buf, size, 0);
+    }
 
+    Message* recv_m() override {
+        sockaddr_in sender;
+        socklen_t addrlen = sizeof(sender);
+        int req = accept(sock,(sockaddr*)&sender,&addrlen);
+        size_t size = 0;
+        assert(read(req,&size,sizeof(size_t)) == 0 && "Failure");
+        char* buf = new char[size];
+        int rd = 0;
+        while(rd != size) {
+            rd += read(req,buf+rd, size - rd);
+        }
+        Deserializer d(buf,size);
+        Message* msg = new Message(d);
+        return msg;
+    }
 };
