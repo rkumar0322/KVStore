@@ -2,10 +2,7 @@
 eau2 system is a distributed key-value store which stores key-value pairs. Every node in the networks keeps track of its own key value stores, and they are able to get access to other nodes inside the application. 
 
 # Architecture 
-
-
-
-
+- The application class is the user-level interface which will used for reading, storing, retrieving and writing data. 
 
 # Implementation 
 ## Dataframe
@@ -25,6 +22,7 @@ eau2 system is a distributed key-value store which stores key-value pairs. Every
 
 ## Use Cases
 - To create a DataFrame, assign it as the value of a key, and insert the keyvalue pair into a KDStore:
+    
     size_t SZ = 1000*1000;
     double* vals = new double[SZ];
     double sum = 0;
