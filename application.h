@@ -2,6 +2,7 @@
 #include "kdstore.h"
 #include "keyvalue.h"
 
+
 class Application: public Object 
 {
 public:
@@ -12,6 +13,15 @@ public:
         kv = new KDStore();
         index = idx;
     };
+
+    Application(NetworkIfc* ifc, size_t idx) {
+        kv = new KDStore(ifc, idx);
+        index = idx;
+    };
+    Application(KDStore* kd, size_t idx) {
+        kv = kd;
+        index = idx;
+    }
 
     ~Application() {
         delete kv;
@@ -53,7 +63,7 @@ public:
   Key* verify;
   Key* check;
  
-  Demo(size_t idx): Application(idx) {
+  Demo(NetworkIfc* ifc, size_t idx): Application(ifc, idx) {
       String* s1 = new String("main");
       main = new Key(s1, 0);
       String* s2 = new String("verif");
@@ -61,6 +71,15 @@ public:
       String* s3 = new String("check");
       check = new Key(s3, 0);
   }
+
+    Demo(KDStore* kv, size_t idx): Application(kv,idx) {
+        String* s1 = new String("main");
+        main = new Key(s1, 0);
+        String* s2 = new String("verif");
+        verify = new Key(s2, 0);
+        String* s3 = new String("check");
+        check = new Key(s3, 0);
+    }
  
   void run_() override {
     switch(this_node()) {
@@ -77,10 +96,13 @@ public:
     for (size_t i = 0; i < SZ; ++i) sum += vals[i] = i;
     DataFrame::fromArray(main, kv, SZ, vals);
     DataFrame::fromScalar(check, kv, sum);
+    printf("FINISHES THIS PART\n");
   }
  
   void counter() {
+      printf("MAKES IT TO COUNTER\n");
     DataFrame* v = kv->waitandget(main);
+      printf("GETS TO DATAFRAME\n");
     size_t sum = 0;
     for (size_t i = 0; i < 100*1000; ++i) sum += v->get_double(0,i);
     p("The sum is  ").pln(sum);

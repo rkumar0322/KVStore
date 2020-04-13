@@ -1,8 +1,6 @@
-#include "network_ifc.h"
 #include "thread.h"
 #include "map.h"
 #include "message.h"
-#
 #include <set>
 
 class MessArrayQ : public Array {
@@ -68,6 +66,13 @@ class NetworkPseudo : public NetworkIfc {
 public:
     String_size_t_Map threads_;
     MQArray qs_;
+    size_t index_;
+
+    NetworkPseudo(size_t num_nodes) : qs_(1){
+        for (size_t i = 0; i < num_nodes;i++) {
+            qs_.add(new MessageQueue());
+        }
+    }
 
     void register_node(size_t idx) override {
         String* tid = Thread::thread_id();
@@ -85,4 +90,10 @@ public:
         delete tid;
         return qs_.get(i)->pop();
     }
+
+    size_t index() {
+        return index_;
+    }
+
+
 };

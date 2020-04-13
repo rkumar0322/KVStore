@@ -3,12 +3,19 @@
 #include "string.h"
 //#include <unistd.h>
 #include <stdio.h>
-//#include <sys/socket.h>
-#include <stdlib.h>
-//#include <netinet/in.h>
 #include <string>
-#include "array.h"
-//#include <arpa/inet.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <assert.h>
+#include <cstdarg>
+#include <iostream>
+#include <exception>
+
+class Message;
+class Register;
+class Directory;
 
 
 enum class MsgKind { Ack, Nack, Put,
@@ -28,15 +35,44 @@ class Message : public Object {
 
     size_t id_;     // an id t unique within the node
 
+    size_t msgsize_;
+
+    char* data_;
+
+
     Message(Deserializer &d) {
         sender_ = d.read_size_t();
         target_ = d.read_size_t();
         id_ = d.read_size_t();
+        msgsize_ = d.read_size_t();
+        data_ = d.read_chars(msgsize_);
+    }
 
+    Message(MsgKind kind, size_t sender, size_t target, size_t id, size_t msgsize,char* data) {
+        printf("FIELDS\n");
+        kind_ = kind;
+        printf("FIELDS\n");
+        sender_ = sender;
+        printf("FIELDS\n");
+        target_ = target;
+        printf("FIELDS\n");
+        id_ = id;
+        printf("FIELDS\n");
+        msgsize_ = msgsize;
+        printf("FIELDS\n");
+        data_ = data;
+        printf("FIELDS\n");
+    }
+
+    void serialize(Serializer &ser) {
+        ser.write_size_t(sender_);
+        ser.write_size_t(target_);
+        ser.write_size_t(id_);
+        ser.write_size_t(msgsize_);
+        ser.write_chars(data_,msgsize_);
     }
 
     Message() {
-
     }
 
     size_t target() {
@@ -45,10 +81,19 @@ class Message : public Object {
 
 };
 
+class WaitAndGet : public Message {
+public:
+    WaitAndGet(size_t s1, size_t s2, size_t s3) {
+        kind_ = MsgKind::WaitAndGet;
+        sender_ = s1;
+        target_ = s2;
+        id_ = s3;
+    }
+};
+
  
 
 class Ack : public Message {
-
 
     public:
     
@@ -154,15 +199,15 @@ class Directory : public Message {
     StrArray* addresses;  // owned; strings owned
 
     
-    Directory(size_t s1, size_t s2, size_t s3, size_t s4, 
-    size_t* s5, StrArray* s) {
+    Directory(size_t sender, size_t target, size_t id, size_t client,
+    size_t* ports, StrArray* addresses) {
         kind_ = MsgKind::Directory;
-        sender_ = s1;
-        target_ = s2;
-        id_ = s3;
-        client = s4;
-        ports = s5;
-        addresses = s; 
+        sender_ = sender;
+        target_ = target;
+        id_ = id;
+        client = client;
+        ports = ports;
+        addresses = addresses;
     }
 
     Directory(size_t* ports, String** addresses1, size_t arr_addr) {

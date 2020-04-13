@@ -3,7 +3,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <assert.h>
-#include "network_ifc.h"
 #include <cstdarg>
 #include <iostream>
 #include <exception>

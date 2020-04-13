@@ -1,6 +1,7 @@
 #pragma once
 
 #include "object.h"
+#include "string.h"
 
 /**A key is part of kvstore which contains a string and a node index*/
 class Key: public Object {
@@ -12,6 +13,15 @@ class Key: public Object {
 		Key(String* key, size_t s) {
 			this->key_ = key;
 			this->nodeidx = s;
+		}
+		Key(Deserializer &dser) {
+		    key_ = new String(dser);
+		    nodeidx = dser.read_size_t();
+		}
+
+		void serialize(Serializer &ser) {
+		    key_->serialize(ser);
+		    ser.write_size_t(nodeidx);
 		}
 
 		/**Deconstructor*/
@@ -30,6 +40,8 @@ class Key: public Object {
 		}
 };
 
+
+
 /**A Value is part of kvstore which stores the char* representation of dataframe after serialized.*/
 class Value: public Object {
 	public:
@@ -41,6 +53,11 @@ class Value: public Object {
 			val_ = nullptr;
 		}
 
+		Value(Deserializer &dser) {
+            size_ = dser.read_size_t();
+		    val_= dser.read_chars(size_);
+		}
+
 		
 		Value(const char* buf) {
 			val_ = new char[strlen(buf)];
@@ -48,8 +65,8 @@ class Value: public Object {
 		}
 
 		Value(Serializer &ser) {
+            size_ = ser.length_;
 		    val_ = ser.data_;
-		    size_ = ser.length_;
 		}
 
 		/**Deconstructor*/
@@ -72,3 +89,23 @@ class Value: public Object {
 		}
 };
 
+class KVPair : public Object {
+public:
+    Key* k;
+    Value* v;
+
+    KVPair(Key* k, Value* v) {
+        k = k;
+        v = v;
+    }
+
+    KVPair(Deserializer &d) {
+        k = new Key(d);
+        v = new Value(d);
+    }
+
+    void serialize(Serializer &s) {
+        k->serialize(s);
+        v->serialize(s);
+    }
+};
