@@ -1,6 +1,6 @@
 
-#include "helper.h"
-#include "array.h"
+#include "../helpers/helper.h"
+#include "../helpers/array.h"
 #pragma once
 class IntColumn;
 class BoolColumn;
@@ -49,7 +49,7 @@ public:
     virtual void push_back(double val) {
         assert(0);
     }
-    virtual void push_back(String* val) {
+    virtual void push_back(String val) {
         assert(0);
     }
 
@@ -91,6 +91,9 @@ public:
     }
     IntColumn(Deserializer &dser) {
         arr = new IntArray(dser);
+    }
+    ~IntColumn() {
+
     }
     int get(size_t idx) {
         return arr->get(idx);
@@ -135,6 +138,9 @@ public:
     FloatColumn* as_float() {
         return this;
     }
+    ~FloatColumn(){
+
+    }
     /** Set value at idx. An out of bound idx is undefined.  */
     void set(size_t idx, float val) {
         arr->set(val,idx);
@@ -157,10 +163,13 @@ public:
     DoubleArray* arr;
 
     DoubleColumn() {
-        this->arr = new DoubleArray();
+        arr = new DoubleArray();
     }
     DoubleColumn(double n, ...) {
 
+    }
+    ~DoubleColumn() {
+        delete arr;
     }
     double get(size_t idx) {
         return arr->get(idx);
@@ -169,7 +178,6 @@ public:
         return this;
     }
     DoubleColumn(Deserializer &dser) {
-
         arr = new DoubleArray(dser);
 
     }
@@ -251,13 +259,13 @@ public:
         return arr->get(idx);
     }
     /** Out of bound idx is undefined. */
-    void set(size_t idx, String* val) {
+    void set(size_t idx, String val) {
         arr->set(val,idx);
     }
     size_t size() {
         return arr->size();
     }
-    void push_back(String* val) {
+    void push_back(String val) {
         arr->add(val);
     }
     void serialize(Serializer &ser) {

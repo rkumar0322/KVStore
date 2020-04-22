@@ -21,16 +21,15 @@
  */
 class Row : public Object {
  public:
-	 Schema* s;
+	 Schema s;
 	 Column** data;
 	 char* types;
 	 size_t num;
 	 size_t index;
 	
   /** Build a row following a schema. */
-  Row(Schema& scm) {
-	  s = new Schema(scm.column_types);
-	  types = scm.column_types;
+  Row(Schema& scm) : s(scm.column_types->cstr_) {
+	  types = scm.column_types->cstr_;
 	  num = scm.column_num;
 	  data = new Column*[num];
 	  for(size_t i = 0; i < num; i++) {
@@ -39,17 +38,32 @@ class Row : public Object {
 		  }
 		  else if (types[i] == 'I') {
                           data[i] = new IntColumn();
+                          data[i]->as_bool()->push_back(1);
                   }
 		  else if (types[i] == 'B') {
                           data[i] = new BoolColumn();
+                          data[i]->as_bool()->push_back(true);
                   }
 		  else if (types[i] == 'F') {
                           data[i] = new FloatColumn();
+                          data[i]->as_float()->push_back(1.000);
                   }
           else if (types[i] == 'D') {
                           data[i] = new DoubleColumn();
+                          data[i]->as_double()->push_back(1.000);
                   }
 	  }
+  }
+
+  ~Row() {
+      for (int i = 0; i < num;i++) {
+          if(s.col_type(i) == 'D') {
+              DoubleColumn* d = data[i]->as_double();
+              data[i] = nullptr;
+              delete d;
+          }
+      }
+      delete[] data;
   }
  
   /** Setters: set the given column with the given value. Setting a column with
@@ -75,11 +89,11 @@ class Row : public Object {
   void set(size_t col, double val) {
 	  if(types[col] == 'D') {
           data[col]->as_double()->set(0, val);
-          }
+	  }
   }
 
   /** The string is external. */
-  void set(size_t col, String* val) {
+  void set(size_t col, String val) {
 	  if(types[col] == 'S') {
           data[col]->as_string()->set(0, val);
       }

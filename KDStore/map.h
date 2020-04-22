@@ -1,7 +1,8 @@
 #pragma once 
 
-#include "object.h"
+#include "../helpers/object.h"
 #include "keyvalue.h"
+#include "../DataFrame/dataframe.h"
 
 //A map stores a list of keys and a list of values.
 //Key and value at the same index in the list are paired.
@@ -21,10 +22,7 @@ public:
     }
 
     //deconstruct
-    ~Map() {
-        delete keys_;
-        delete values_;
-        len = 0;
+    virtual ~Map() {
     }
 
     //overwrites equal method
@@ -51,7 +49,7 @@ public:
     //put key value pair into the map
     //update size or list if neccessary
     //return true if key is founded, false if key is new
-    bool put(Object* k, Object* v) {
+    bool put_(Object* k, Object* v) {
         //size_t index;
         for(size_t i = 0; i < len; i++) {
             if(keys_[i]->equals(k)) {
@@ -82,17 +80,16 @@ public:
             len += 1;
             return false;
         }
-
     }
 
     //get the value of the given key
     //return nullptr if doesn't find key
-    Object* get(Object* k) {
+    Object* get_(Object* k) {
         for(size_t i = 0; i < len; i++) {
-            if(keys_[i]->equals(k)) {
+            if(k->equals(keys_[i])) {
                 return values_[i];
             }
-        }
+        } 
         return nullptr;
     }
 

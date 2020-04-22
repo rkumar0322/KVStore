@@ -1,6 +1,6 @@
 #pragma once
-#include "object.h"
-#include "string.h"
+#include "../helpers/object.h"
+#include "../helpers/string.h"
 //#include <unistd.h>
 #include <stdio.h>
 #include <string>
@@ -18,8 +18,8 @@ class Register;
 class Directory;
 
 
-enum class MsgKind { Ack, Nack, Put,
-                    Reply,  Get, WaitAndGet, Status,
+enum class MsgKind { Ack, Nack, Put,Finished,
+                    PutReply,GetReply,WaitandGetReply,  Get, WaitAndGet, Status,
                     Kill,   Register,  Directory };
 
  
@@ -29,7 +29,11 @@ class Message : public Object {
     
     MsgKind kind_;  // the message kind
 
+    size_t extra_sender;
+
     size_t sender_; // the index of the sender node
+
+    size_t extra_target;
 
     size_t target_; // the index of the receiver node
 
@@ -49,19 +53,15 @@ class Message : public Object {
     }
 
     Message(MsgKind kind, size_t sender, size_t target, size_t id, size_t msgsize,char* data) {
-        printf("FIELDS\n");
         kind_ = kind;
-        printf("FIELDS\n");
+        extra_sender = sender;
         sender_ = sender;
-        printf("FIELDS\n");
+        extra_target = target;
         target_ = target;
-        printf("FIELDS\n");
+
         id_ = id;
-        printf("FIELDS\n");
         msgsize_ = msgsize;
-        printf("FIELDS\n");
         data_ = data;
-        printf("FIELDS\n");
     }
 
     void serialize(Serializer &ser) {
@@ -187,7 +187,7 @@ public:
 };
 
  
-
+/*
 class Directory : public Message {
 
     public:
@@ -253,6 +253,7 @@ class Directory : public Message {
         strcat(buf, addresses_code);
         return buf; 
 
-   }*/
+   }
 
 };
+*/

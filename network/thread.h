@@ -5,8 +5,10 @@
 #include <mutex>
 #include <condition_variable>
 #include <sstream>
-#include "object.h"
-#include "string.h"
+#include "../helpers/object.h"
+#include "../helpers/string.h"
+#include <atomic>
+
 
 
 /** A Thread wraps the thread operations in the standard library.

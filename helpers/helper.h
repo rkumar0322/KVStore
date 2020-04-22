@@ -26,6 +26,7 @@ class Sys {
   Sys& pln(bool c) { std::cout << c << "\n";  return *this; }  
   Sys& pln(char c) { std::cout << c << "\n";  return *this; }
   Sys& pln(float x) { std::cout << x << "\n";  return *this; }
+    Sys& pln(double x) { std::cout << x << "\n";  return *this; }
   Sys& pln(size_t x) { std::cout << x << "\n";  return *this; }
   Sys& pln(const char* c) { std::cout << c << "\n";  return *this; }
 

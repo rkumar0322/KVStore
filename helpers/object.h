@@ -26,7 +26,7 @@ public:
     size_t hash() { return hash_ != 0 ? hash_ : hash_ = hash_me(); }
 
     /** Subclasses should redefine */
-    virtual bool equals(Object  * other) { return this == other;  }
+    virtual bool equals(Object  * other) { return this->hash_ == other->hash_;  }
 
     /** Return a copy of the object; nullptr is considered an error */
     virtual Object* clone() { return nullptr; }

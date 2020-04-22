@@ -6,7 +6,7 @@
 
 #define LOG(...) fprintf(stderr, "(" __FILE__ ") " __VA_ARGS__);
 
-class Serializer {
+class Serializer{
 public:
     char* data_;
     size_t length_ = 0;
@@ -14,6 +14,8 @@ public:
     Serializer() {
         data_ = new char[1024];
         cap_ = 1024;
+    }
+    ~Serializer() {
     }
     void write_size_t(size_t v) {
         if (length_+ sizeof(size_t) > cap_) {
@@ -28,7 +30,7 @@ public:
     }
     void write_chars(char* v, size_t len) {
         if (length_+ len > cap_) {
-            char* newstr = new char[length_ * 2];
+            char* newstr = new char[length_ + len];
             memcpy(newstr,data_,length_);
             delete[] data_;
             data_ = newstr;
@@ -83,7 +85,8 @@ public:
     }
     void write_doublearr(double* v, size_t len) {
         if (length_+ (sizeof(double)*len) > cap_) {
-            char* newstr = new char[length_ * sizeof(double)*len];
+            size_t offset = len * 8;
+            char* newstr = new char[(length_ + (sizeof(double)*len))* 2];
             memcpy(newstr,data_,length_);
             delete[] data_;
             data_ = newstr;
@@ -119,8 +122,9 @@ public:
     char* data_;
     size_t length_;
     size_t cap_len;
-    Deserializer(char* data, size_t &length) {
-        data_ = data;
+    Deserializer(char* data, size_t length) {
+        data_ = new char[length];
+        memcpy(data_,data,length);
         cap_len = length;
         length_ = 0;
     }
@@ -131,6 +135,10 @@ public:
         cap_len = s.length_;
 
     }
+
+    ~Deserializer() {
+        delete[] data_;
+    }
     size_t read_size_t() {
         size_t v;
         memcpy(&v,data_+length_, sizeof(size_t));
@@ -138,9 +146,9 @@ public:
         return v;
     }
     char* read_chars(size_t len) {
-        char *x = new char[len];
-        memcpy(x, data_ + length_, len * sizeof(char));
-        length_ += len * sizeof(char);
+        char* x = new char[len];
+        memcpy(x, data_ + length_, len);
+        length_ += len;
         return x;
     }
     float read_float() {
