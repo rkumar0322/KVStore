@@ -10,19 +10,20 @@ class Map;
 class KDStore : public Map {
 
 public:
-    NetworkIfc* ifc_;
-    size_t index_;
-    int num_finishes;
-    Lock get_lock;
-    Lock wg_lock;
-    Lock put_lock;
-    Lock general_lock;
-    bool process_over;
-    bool app_done;
-    MessageQueue* put_queue;
-    MessageQueue* get_queue;
-    MessageQueue* waitandget_queue;
+    NetworkIfc* ifc_;  // the network which this node belongs to
+    size_t index_;  // the index of the node 
+    int num_finishes;  
+    Lock get_lock; // lock for get method
+    Lock wg_lock;  // lock for wait_get method
+    Lock put_lock; // lock for put method 
+    Lock general_lock;   // lock for the current node
+    bool process_over;   //check for process status 
+    bool app_done;       //check for application status 
+    MessageQueue* put_queue;  // A list of put messages received from put method 
+    MessageQueue* get_queue;  // A list of messages received with values from get method
+    MessageQueue* waitandget_queue; // A list of messages received with values from wait_get method
     int num_nodes;
+    
     /*Constructor*/
     KDStore() : Map() {
     }
@@ -64,12 +65,18 @@ public:
         delete[] values_;
     }
 
+    /** get the value of the given key
+     * @return the Dataframe* of the key
+    */
     DataFrame* get(Key k) {
         Value v1 = internal_get(k);
         Deserializer d(v1.val_, v1.size_);
         return new DataFrame(d);
     }
 
+    /** helper of get method
+     * @return the Value of the key
+    */
     Value internal_get(Key k) {
         if (k.nodeidx == index_) {
             Object* o = get_(&k);
@@ -94,12 +101,18 @@ public:
         }
     }
 
+    /** get the value of the given key, blocking other threads from accessing it. 
+     * @return the Dataframe* of the key
+    */
     DataFrame* waitAndGet(Key k) {
         Value v = internal_wg(k);
         Deserializer d(v.val_, v.size_);
         return new DataFrame(d);
     }
 
+    /** helper of waitandGet method.
+     * @return the Value of the key
+    */
     Value internal_wg(Key k) {
         if (k.nodeidx == index_) {
             printf("GETS STUCK node %d\n",index_);
@@ -197,6 +210,9 @@ public:
         //printf("FINISHES THE PUT FROM NODE %d\n",index_);
     }
 
+    /** insert the key-value pair, blocking other threads from inserting at the same time 
+     * @return void 
+    */
     void put(Key k, DataFrame* df) {
         printf("GETS TO THIS POINT %d\n",k.nodeidx);
         Serializer s;
@@ -206,6 +222,9 @@ public:
         internal_put(copy,v);
     }
 
+    /** helper of put method, check if the key-value pair is inside the current node.
+     * @return void
+    */
     void internal_put(Key* k, Value* v) {
         if (k->nodeidx == index_) {
             general_lock.lock();
