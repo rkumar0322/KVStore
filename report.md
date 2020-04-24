@@ -6,7 +6,7 @@ Every node in the networks keeps track of its own key value stores, and they are
 # Architecture 
 ## Application 
 - The application is the user-level interface which is used for reading, storing, retrieving and writing data. 
-- We created 2 subclasses for testing application:  Trivial && Demo 
+- We created 3 subclasses for testing application:  Trivial, Demo, and WordCount. 
 - Trivial is for testing writing and storing Dataframe inside application
 - Demo is for testing an application running with multiple threads: which we create 3 kinds of nodes: producer, counter and summarizer.
 - Reader and Writer is for visiting rows to read and write the text file.
@@ -82,4 +82,24 @@ The components of a dataframe indlude a column, a schema and row which are neede
     Key* key = new Key(s, 0);
     
     DataFrame* df = DataFrame::fromArray(key, kv, SZ, vals);
+    
+## To Run the Application:
 
+In the command line, to run WordCount for the specifications that we were able to use, please type the following: 
+
+make wc
+
+
+In the command line, to run WordCount for the specifications that we were able to use, please type the following: 
+
+make wc
+
+In the command line, to run Demo for the specifications that we were able to use, please type the following: 
+
+make demo
+
+To call your own application, please use the following monikers: 
+
+```g++ -g -Wall -pthread -pedantic -std=c++11 main.cpp -o eauw```
+
+```./ts6 -nodes 3 -pseudo true -app wc -file 100k.txt```
