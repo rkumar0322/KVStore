@@ -17,19 +17,20 @@ class Map;
 class KDStore : public Map {
 
 public:
-    NetworkIfc* ifc_;
-    size_t index_;
+    NetworkIfc* ifc_;  // the network which this node belongs to
+    size_t index_;  // the index of the node 
     int num_finishes;
-    Lock get_lock;
-    Lock wg_lock;
-    Lock put_lock;
+    Lock get_lock; // lock for get method
+    Lock wg_lock;  // lock for wait_get method
+    Lock put_lock; // lock for put method 
     Lock general_lock;
-    bool process_over;
-    bool app_done;
+    bool process_over;   //check for process status 
+    bool app_done;       //check for application status 
     MessageQueue* put_queue;
-    MessageQueue* get_queue;
-    MessageQueue* waitandget_queue;
+    MessageQueue* get_queue;  // A list of messages received with values from get method
+    MessageQueue* waitandget_queue; // A list of messages received with values from wait_get method
     int num_nodes;
+    
     /*Constructor*/
     KDStore() : Map() {
     }
@@ -71,23 +72,30 @@ public:
         delete[] values_;
     }
 
+    /** get the value of the given key
+     * @return the Dataframe* of the key
+    */
     DataFrame* get(Key k) {
+        //check if it the key comes from the current node
         if (k.nodeidx == index_) {
             Object* o = get_(&k);
             Value* v = (Value*)o;
             Value v1 = *v;
             Deserializer d(v1.val_, v1.size_);
             return new DataFrame(d);
-        } else {
+        } else { //if not, set a get_lock
             get_lock.lock();
             Serializer s1;
             k.serialize(s1);
+            // create and send a get message 
             Message* m = new Message(MsgKind::Get,index_,k.nodeidx,0,s1.length_,s1.data_);
             ifc_->send_m(m);
+            // wait until we receive the message with the value 
             while(get_queue->peek() == nullptr) {
 
                 get_lock.wait();
             }
+            //extract and deserialize the value
             Message* m1 = get_queue->pop();
             Deserializer d1(m1->data_,m1->msgsize_);
             Value v(d1);
@@ -98,8 +106,13 @@ public:
         }
     }
 
+    /** get the value of the given key, blocking other threads from accessing it 
+     * @return the Dataframe* of the key
+    */
     DataFrame* waitAndGet(Key k) {
+        //check if the key comes from the current node
         if (k.nodeidx == index_) {
+            //set a lock
             general_lock.lock();
             while(get_(&k) == nullptr) {
                 general_lock.wait();
@@ -110,12 +123,13 @@ public:
             Deserializer d(v->val_, v->size_);
             general_lock.unlock();
             return new DataFrame(d);
-        } else {
+        } else { //if the key comes from other nodes 
             wg_lock.lock();
             Serializer s1;
             k.serialize(s1);
             Message* m = new Message(MsgKind::WaitAndGet,index_,k.nodeidx,0,s1.length_,s1.data_);
             ifc_->send_m(m);
+            // wait until we receive the message with the value 
             while(waitandget_queue->peek() == nullptr) {
                 wg_lock.wait();
             }
@@ -127,9 +141,13 @@ public:
         }
     }
 
+    /** insert the key-value pair, blocking other threads from inserting at the same time 
+     * @return void 
+    */
     void put(Key k, DataFrame* df) {
         Serializer s;
         df->serialize(s);
+        //check if it the key comes from the current node
         if (k.nodeidx == index_) {
             general_lock.lock();
             Value* v = new Value(s);
@@ -137,7 +155,7 @@ public:
             put_(copy, v);
             general_lock.unlock();
             general_lock.notify_all();
-        } else {
+        } else { //if the key comes from other nodes
             put_lock.lock();
             Value v1(s);
             KVPair p(k,v1);
@@ -147,6 +165,7 @@ public:
             KVPair p1(d1);
             Message* m = new Message(MsgKind::Put,index_,k.nodeidx,0,s1.length_,s1.data_);
             ifc_->send_m(m);
+            // wait until the put has been successfully done 
             while(put_queue->peek() == nullptr) {
                 put_lock.wait();
             }
@@ -162,17 +181,6 @@ public:
 
     void applicationdone() {
         app_done = true;
-        //num_finishes++;
-        //printf("GETS TO THIS POINT %d\n",index_);
-        /*
-        if (num_finishes == num_nodes) {
-            end_producer();
-            return;
-        }
-        if (index_ != 0) {
-            //ifc_->send_m(new Message(MsgKind::Finished,index_,0,0,0,""));
-        }
-         */
         general_lock.notify_all();
     }
 
@@ -233,8 +241,6 @@ public:
                 put_lock.lock();
                 Deserializer d(m->data_, m->msgsize_);
                 KVPair k1(d);
-                //Key *copy = new Key(k1.k.key_->cstr_, k1.k.nodeidx);
-                //Value *val = new Value(k1.v.val_,k1.v.size_);
                 put_(&k1.k, &k1.v);
                 general_lock.notify_all();
                 ifc_->send_m(new Message(MsgKind::PutReply, index_, m->sender_, 0, 0, ""));
