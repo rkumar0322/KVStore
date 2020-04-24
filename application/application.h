@@ -1,13 +1,20 @@
 #include "../helpers/object.h"
 #include "../KDStore/kdstore.h"
 
-
+/** The user-level interface which is used for reading,
+ * storing, retrieving and writing data.
+ * It contains a KDStore which keep tracks of all nodes,
+ * and a number which represents its index.
+ * 
+ * 
+ **/ 
 class Application: public Object
 {
 public:
     KDStore kv;
     size_t index;
 
+    /**Constructor*/
     Application(size_t idx) : kv(idx) {
         index = idx;
 
@@ -17,10 +24,12 @@ public:
         index = idx;
     }
 
+    /** run the application*/
     virtual void run_() {
 
     }
 
+    /** return the index of the current application*/
     size_t this_node() {
         return index;
     }
@@ -28,6 +37,7 @@ public:
 
 };
 
+/** An example class for testing dataframe inside application*/
 class Trivial : public Application {
 public:
     Trivial(NetworkIfc& ifc, size_t idx) :Application(ifc,idx) {}
@@ -50,9 +60,16 @@ public:
     }
 };
 
+/** A Demo class for testing different nodes running in the same application 
+ * Use 3 nodes: producer, counter, summerizer 
+*/
 class Demo : public Application {
 public:
+
+    /**Constructor*/
     Demo(size_t idx): Application(idx) {}
+
+    /**Pass in a NetworkIfc to initialize the network inside application*/
     Demo(NetworkIfc& ifc, size_t idx) :Application(ifc,idx) {}
 
     void run_() override {
@@ -63,6 +80,9 @@ public:
         }
     }
 
+    /**create a large dataframe with data and a small
+     * dataframe with the sum.
+     */
     void producer() {
         Key main("main",0);
         Key verify("verif",0);
@@ -76,6 +96,7 @@ public:
         delete[] vals;
     }
 
+    /** get the dataframe and sum it*/
     void counter() {
         Key main("main",0);
         Key verify("verif",0);
@@ -87,6 +108,7 @@ public:
         DataFrame::fromScalar(&verify, &kv, sum);
     }
 
+    /** get both sums from producer and counter, and output the result*/
     void summarizer() {
         Key main("main",0);
         Key verify("verif",0);
