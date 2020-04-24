@@ -12,7 +12,7 @@ class Key: public Object {
 		Key() {}
 
 		/**Constructor*/
-		Key(String key, size_t s) {
+		Key(String* key, size_t s) {
 			this->key_ = &key;
 			this->nodeidx = s;
 		}
