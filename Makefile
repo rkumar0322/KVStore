@@ -23,15 +23,15 @@ network1:
 	valgrind --leak-check=full ./ts5
 	./ts5 -nodes 3
 
-network2:
+wc:
 	g++ -g -Wall -pthread -pedantic -std=c++11 main.cpp -o ts6
 	./ts6 -nodes 3 -pseudo true -app wc -file 100k.txt
 
-network_local:
+RANDOM:
 	g++ -g -Wall -pthread -pedantic -std=c++11 main.cpp -o ts4
-	./ts4 -nodes 3 -pseudo true -app demo -port 3780 -index 0 -masterip 127.0.0.1 -masterport 3780 -ip 127.0.0.1
+	./ts4 -nodes 3 -pseudo true -app wc -port 3780 -index 0 -masterip 127.0.0.1 -masterport 3780 -ip 127.0.0.1
 
-network_client:
+Demo:
 	g++ -g -Wall -pthread -pedantic -std=c++11 main.cpp -o ts4
 	./ts4 -nodes 3 -pseudo true -app demo -port 3780 -index 1 -masterip 127.0.0.1 -masterport 3780 -ip 127.0.0.7
 
