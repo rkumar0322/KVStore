@@ -1,6 +1,7 @@
 #include <iostream>
 #include <assert.h>
 #include <stdio.h>
+#include "arg.h"
 #include "KDStore/map.h"
 
 void test_map() {
