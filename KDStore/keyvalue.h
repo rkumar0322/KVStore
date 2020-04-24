@@ -13,7 +13,7 @@ class Key: public Object {
 
 		/**Constructor*/
 		Key(String* key, size_t s) {
-			this->key_ = &key;
+			this->key_ = key;
 			this->nodeidx = s;
 		}
 
