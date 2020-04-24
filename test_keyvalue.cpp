@@ -5,7 +5,8 @@
 
 void test_key() {
     String* k1 = new String("hello");
-    Key* key1 = new Key(k1, 0);
+    size_t s1 = 0;
+    Key* key1 = new Key(k1, s1);
     Serializer ser;
     key1->serialize(ser);
     Deserializer dser(ser);
@@ -42,7 +43,7 @@ void test_KVPair() {
     Deserializer dser(ser);
     KVPair* kv2 = new KVPair(dser);
     assert(kv->equals(kv2));
-    std::cout << "test_value passed" << "\n";
+    std::cout << "test_KVPair passed" << "\n";
 
 }
 

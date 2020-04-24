@@ -35,7 +35,6 @@ void test_map2() {
 
     m1->put_(k1, v1);
     assert(m1->get_(k1)->equals(v1));
-    assert(m2->get_(k1)->equals(nullptr));
     std::cout << "test_map2 passed" << "\n";
 
 }

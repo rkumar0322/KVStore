@@ -7,6 +7,16 @@ test_kvstore:
 	g++ -g -Wall -pedantic -std=c++11 test_kvstore.cpp -o ts3
 	valgrind --leak-check=full ./ts3
 	./ts3
+	
+test_map:
+	g++ -g -Wall -pedantic -std=c++11 test_map.cpp -o ts7
+	valgrind --leak-check=full ./ts7
+	./ts7
+
+test_keyvalue:
+	g++ -g -Wall -pedantic -std=c++11 test_keyvalue.cpp -o ts8
+	valgrind --leak-check=full ./ts8
+	./ts8
 
 network1:
 	g++ -g -Wall -pthread -pedantic -std=c++11 main.cpp -o ts5
@@ -20,8 +30,12 @@ network_local:
 no_valgrind:
 	g++ -g -Wall -pedantic -std=c++11 test.cpp -o ts1
 	g++ -g -Wall -pedantic -std=c++11 test_kvstore.cpp -o ts3
+	g++ -g -Wall -pedantic -std=c++11 test_map.cpp -o ts7
+	g++ -g -Wall -pedantic -std=c++11 test_keyvalue.cpp -o ts8
 	./ts1
 	./ts3
+	./ts7
+	./ts8
 
 
 run:
