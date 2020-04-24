@@ -148,6 +148,12 @@ public:
         }
     }
 
+    /**
+     *
+     * @param df
+     * @param node
+     * @return
+     */
     DataFrame* get_chunked_df(DataFrame* df,size_t node) {
         DataFrame* df2 = new DataFrame(*df->s);
         for (int j = 0; j < df->num;j++) {
@@ -177,6 +183,11 @@ public:
         return df2;
     }
 
+    /**
+     * Method that given a dataframe, chunk the dataframe accordingly based on the number of rows per chunk.
+     * @param df to be split up
+     * @return A list of dataframes that were derived based on how many rows a chunk has to have.
+     */
     DataFrame** get_chunked_dfs(DataFrame* df) {
         DataFrame** dfs = new DataFrame*[arg.num_nodes];
         for (int i = 0; i < arg.num_nodes;i++) {

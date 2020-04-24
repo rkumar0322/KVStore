@@ -6,6 +6,9 @@
 
 #define LOG(...) fprintf(stderr, "(" __FILE__ ") " __VA_ARGS__);
 
+/**
+ * A Utility where primitive data is compressed. into a char buffer.
+ */
 class Serializer{
 public:
     char* data_;
@@ -17,6 +20,11 @@ public:
     }
     ~Serializer() {
     }
+
+    /**
+     * writes a size_t into the buffer.
+     * @param v a size_t
+     */
     void write_size_t(size_t v) {
         if (length_+ sizeof(size_t) > cap_) {
             char* newstr = new char[cap_ * 2];
@@ -28,6 +36,11 @@ public:
         memcpy(data_+length_,&v, sizeof(size_t));
         length_ += sizeof(size_t);
     }
+
+    /**
+     * writes a char* into the buffer.
+     * @param v a char*
+     */
     void write_chars(char* v, size_t len) {
         if (length_+ len > cap_) {
             char* newstr = new char[length_ + len];
@@ -39,6 +52,11 @@ public:
         memcpy(data_+ length_,v, len);
         length_ += len;
     }
+
+    /**
+     * writes a float into the buffer.
+     * @param v a float
+     */
     void write_float(float v) {
         if (length_+ sizeof(size_t) > cap_) {
             char* newstr = new char[length_ * 2];
@@ -50,6 +68,11 @@ public:
         memcpy(data_ + length_,&v, sizeof(float));
         length_ += sizeof(float);
     }
+
+    /**
+     * writes a double into the buffer.
+     * @param v a double
+     */
     void write_double(double v) {
         if (length_+ sizeof(double) > cap_) {
             char* newstr = new char[length_ * 2];
@@ -61,6 +84,11 @@ public:
         memcpy(data_ + length_,&v, sizeof(double));
         length_ += sizeof(double);
     }
+
+    /**
+     * writes a int array into the buffer.
+     * @param v a int array
+     */
     void write_intarr(int* v, size_t len) {
         if (length_+ (sizeof(int)*len) > cap_) {
             char* newstr = new char[length_ * 2];
@@ -72,6 +100,11 @@ public:
         memcpy(data_ + length_, v, len * sizeof(int));
         length_ += len * sizeof(int);
     }
+
+    /**
+     * writes a float array into the buffer.
+     * @param v a float array
+     */
     void write_floatarr(float* v, size_t len) {
         if (length_+ (sizeof(float)*len) > cap_) {
             char* newstr = new char[length_ * 2];
@@ -83,6 +116,11 @@ public:
         memcpy(data_ + length_, v, len * sizeof(float));
         length_ += len * sizeof(float);
     }
+
+    /**
+     * writes a double array into the buffer.
+     * @param v a double
+     */
     void write_doublearr(double* v, size_t len) {
         if (length_+ (sizeof(double)*len) > cap_) {
             size_t offset = len * 8;
@@ -95,6 +133,11 @@ public:
         memcpy(data_ + length_, v, len * sizeof(double));
         length_ += len * sizeof(double);
     }
+
+    /**
+     * writes a bool into the buffer.
+     * @param v a bool
+     */
     void write_boolarr(bool* v, size_t len) {
         if (length_+ (sizeof(bool)*len) > cap_) {
             char* newstr = new char[length_ * 2];
@@ -107,16 +150,26 @@ public:
         length_ += len * sizeof(bool);
     }
 
+    /**
+     * return this buffer
+     */
     char* build() {
         return data_;
     }
 
+    /**
+     * size of this buffer
+     * @return the size of this buffer
+     */
     size_t size() {
         return length_;
     }
 
 };
 
+/**
+ * A utility class to decompress data into the respectie original forms from a char buffer.
+ */
 class Deserializer {
 public:
     char* data_;
@@ -139,18 +192,30 @@ public:
     ~Deserializer() {
         delete[] data_;
     }
+
+    /**
+     * reads a size_t into memory..
+     */
     size_t read_size_t() {
         size_t v;
         memcpy(&v,data_+length_, sizeof(size_t));
         length_ += sizeof(size_t);
         return v;
     }
+
+    /**
+     * reads a char* into memory..
+     */
     char* read_chars(size_t len) {
         char* x = new char[len];
         memcpy(x, data_ + length_, len);
         length_ += len;
         return x;
     }
+
+    /**
+     * reads a f into memory.
+     */
     float read_float() {
         float v;
         memcpy(&v,data_+length_, sizeof(float));

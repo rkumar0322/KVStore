@@ -48,6 +48,10 @@ public:
 
     }
 
+    /**
+     * Deserializes this string
+     * @param ser the string to be serialized.
+     */
     String(Deserializer &ser) {
         size_ = ser.read_size_t();
         cstr_ = ser.read_chars(size_);
