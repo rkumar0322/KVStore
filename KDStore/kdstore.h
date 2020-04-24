@@ -2,13 +2,6 @@
 // Created by Rahul Kumar on 3/31/20.
 //
 
-
-#include "../helpers/serial.h"
-#include "keyvalue.h"
-#include "map.h"
-#include "../network/network_pseudo.h"
-#include "../network/thread.h"
-
 class DataFrame;
 class NetworkPseudo;
 class Map;
@@ -17,20 +10,19 @@ class Map;
 class KDStore : public Map {
 
 public:
-    NetworkIfc* ifc_;  // the network which this node belongs to
-    size_t index_;  // the index of the node 
+    NetworkIfc* ifc_;
+    size_t index_;
     int num_finishes;
-    Lock get_lock; // lock for get method
-    Lock wg_lock;  // lock for wait_get method
-    Lock put_lock; // lock for put method 
+    Lock get_lock;
+    Lock wg_lock;
+    Lock put_lock;
     Lock general_lock;
-    bool process_over;   //check for process status 
-    bool app_done;       //check for application status 
+    bool process_over;
+    bool app_done;
     MessageQueue* put_queue;
-    MessageQueue* get_queue;  // A list of messages received with values from get method
-    MessageQueue* waitandget_queue; // A list of messages received with values from wait_get method
+    MessageQueue* get_queue;
+    MessageQueue* waitandget_queue;
     int num_nodes;
-    
     /*Constructor*/
     KDStore() : Map() {
     }
@@ -72,100 +64,166 @@ public:
         delete[] values_;
     }
 
-    /** get the value of the given key
-     * @return the Dataframe* of the key
-    */
     DataFrame* get(Key k) {
-        //check if it the key comes from the current node
+        Value v1 = internal_get(k);
+        Deserializer d(v1.val_, v1.size_);
+        return new DataFrame(d);
+    }
+
+    Value internal_get(Key k) {
         if (k.nodeidx == index_) {
             Object* o = get_(&k);
             Value* v = (Value*)o;
             Value v1 = *v;
-            Deserializer d(v1.val_, v1.size_);
-            return new DataFrame(d);
-        } else { //if not, set a get_lock
+            return v1;
+        } else {
             get_lock.lock();
             Serializer s1;
             k.serialize(s1);
-            // create and send a get message 
             Message* m = new Message(MsgKind::Get,index_,k.nodeidx,0,s1.length_,s1.data_);
             ifc_->send_m(m);
-            // wait until we receive the message with the value 
             while(get_queue->peek() == nullptr) {
-
                 get_lock.wait();
             }
-            //extract and deserialize the value
             Message* m1 = get_queue->pop();
             Deserializer d1(m1->data_,m1->msgsize_);
             Value v(d1);
-            Deserializer d2(v.val_, v.size_);
             get_lock.unlock();
             get_lock.notify_all();
-            return new DataFrame(d2);
+            return v;
         }
     }
 
-    /** get the value of the given key, blocking other threads from accessing it 
-     * @return the Dataframe* of the key
-    */
     DataFrame* waitAndGet(Key k) {
-        //check if the key comes from the current node
+        Value v = internal_wg(k);
+        Deserializer d(v.val_, v.size_);
+        return new DataFrame(d);
+    }
+
+    Value internal_wg(Key k) {
         if (k.nodeidx == index_) {
-            //set a lock
+            printf("GETS STUCK node %d\n",index_);
             general_lock.lock();
+            printf("LOCKED BY: CONSUMER %d",index_);
+            //assert(get_(&k) != nullptr);
             while(get_(&k) == nullptr) {
                 general_lock.wait();
             }
+            printf("GETS UNSTUCK node %d\n",index_);
             Object* o = get_(&k);
             Value* v = (Value*)o;
             Value v1 = *v;
             Deserializer d(v->val_, v->size_);
             general_lock.unlock();
-            return new DataFrame(d);
-        } else { //if the key comes from other nodes 
+            general_lock.notify_all();
+            printf("UNLOCKED BY: CONSUMER %d",index_);
+            return v1;
+        } else {
             wg_lock.lock();
             Serializer s1;
             k.serialize(s1);
             Message* m = new Message(MsgKind::WaitAndGet,index_,k.nodeidx,0,s1.length_,s1.data_);
             ifc_->send_m(m);
-            // wait until we receive the message with the value 
             while(waitandget_queue->peek() == nullptr) {
                 wg_lock.wait();
             }
             Message* m1 = waitandget_queue->pop();
-            Deserializer d2(m1->data_, m1->msgsize_);
+            Value v(m1->data_, m1->msgsize_);
             wg_lock.unlock();
             wg_lock.notify_all();
-            return new DataFrame(d2);
+            return v;
         }
     }
 
-    /** insert the key-value pair, blocking other threads from inserting at the same time 
-     * @return void 
-    */
+    DataFrame* get_chunked_df(DataFrame* df,size_t node) {
+        DataFrame* df2 = new DataFrame(*df->s);
+        for (int j = 0; j < df->num;j++) {
+            if (df->s->col_type(j) == 'S') {
+                StringColumn* s1 = new StringColumn();
+                StringColumn* s = df->data[j]->as_string();
+                for (int x = node; x < s->chunks_;x= x+arg.num_nodes) {
+                    StringChunk* s2 = s->get_chunk(x);
+                    s1->add_chunk(s2);
+                    s1->len += s2->arr->len;
+                }
+                df2->add_string_column(s1);
+                df2->s->row_num = s1 ->len;
+            } else if (df->s->col_type(j) == 'I') {
+                IntColumn* s1 = new IntColumn();
+                IntColumn* s = df->data[j]->as_int();
+                for (int x = node; x < s->chunks_;x= x+arg.num_nodes) {
+                    IntChunk* s2 = s->get_chunk(x);
+                    s1->add_chunk(s2);
+                    s1->len += s2->arr->len;
+                    printf("THE COUNT OF THIS IS: %d\n",s2->get(0));
+                }
+                df2->add_int_column(s1);
+                df2->s->row_num = s1 ->len;
+            }
+        }
+        return df2;
+    }
+
+    DataFrame** get_chunked_dfs(DataFrame* df) {
+        DataFrame** dfs = new DataFrame*[arg.num_nodes];
+        for (int i = 0; i < arg.num_nodes;i++) {
+            dfs[i] = get_chunked_df(df,i);
+        }
+        return dfs;
+    }
+
+    void distributed_put(Key k, DataFrame* df) {
+        printf("GETS TO THIS POINT\n");
+        DataFrame** dfs = get_chunked_dfs(df);
+        for (int i = 0; i < arg.num_nodes;i++) {
+            //printf("GETS TO THIS POINT\n");
+            //printf("KEY IS: %s\n",k.key_->cstr_);
+            Serializer s;
+            //printf("KEY IS: %s\n",k.key_->cstr_);
+            DataFrame* df1 = dfs[i];
+            //printf("KEY IS: %s\n",k.key_->cstr_);
+            df1->serialize(s);
+            Deserializer d(s.data_,s.length_);
+            DataFrame* df2 = new DataFrame(d);
+            //printf("%s\n",df2->get_string(0,0)->cstr_);
+            //printf("GETS TO THIS POINT\n");
+            //exit(0)
+            Value *v = new Value(s);
+            Key *copy = new Key(k.key_->cstr_, i);
+            //printf("%s\n",copy->key_->cstr_);
+            internal_put(copy,v);
+            //printf("Node %d has their data\n",i);
+        }
+        //printf("FINISHES THE PUT FROM NODE %d\n",index_);
+    }
+
     void put(Key k, DataFrame* df) {
+        printf("GETS TO THIS POINT %d\n",k.nodeidx);
         Serializer s;
         df->serialize(s);
-        //check if it the key comes from the current node
-        if (k.nodeidx == index_) {
+        Value *v = new Value(s);
+        Key *copy = new Key(k.key_->cstr_, k.nodeidx);
+        internal_put(copy,v);
+    }
+
+    void internal_put(Key* k, Value* v) {
+        if (k->nodeidx == index_) {
             general_lock.lock();
-            Value* v = new Value(s);
-            Key* copy = new Key(k.key_->cstr_,k.nodeidx);
-            put_(copy, v);
+            printf("PUT WAS LOCKED BY: CONSUMER %d\n",index_);
+            put_(k, v);
+            printf("DATA WAS PUT IN THIS KEY %s\n",k->key_->cstr_);
+            printf("DATA WAS PUT IN THE STORE LOCALLY %d\n",index_);
             general_lock.unlock();
             general_lock.notify_all();
-        } else { //if the key comes from other nodes
+            printf("PUT WAS UNLOCKED BY: CONSUMER %d\n",index_);
+        } else {
             put_lock.lock();
-            Value v1(s);
-            KVPair p(k,v1);
+            printf("MESSAGES SENT SUCCESSFULLY\n");
+            KVPair p(*k,*v);
             Serializer s1;
             p.serialize(s1);
-            Deserializer d1(s1.data_,s1.length_);
-            KVPair p1(d1);
-            Message* m = new Message(MsgKind::Put,index_,k.nodeidx,0,s1.length_,s1.data_);
+            Message* m = new Message(MsgKind::Put,index_,k->nodeidx,0,s1.length_,s1.data_);
             ifc_->send_m(m);
-            // wait until the put has been successfully done 
             while(put_queue->peek() == nullptr) {
                 put_lock.wait();
             }
@@ -181,7 +239,6 @@ public:
 
     void applicationdone() {
         app_done = true;
-        general_lock.notify_all();
     }
 
     void run() {
@@ -239,9 +296,11 @@ public:
             }
             if (m->kind_ == MsgKind::Put) {
                 put_lock.lock();
+                printf("MAKES it TO THE OTHER NODE\n");
                 Deserializer d(m->data_, m->msgsize_);
                 KVPair k1(d);
                 put_(&k1.k, &k1.v);
+                printf("DATA WAS PUT IN THE STORE\n");
                 general_lock.notify_all();
                 ifc_->send_m(new Message(MsgKind::PutReply, index_, m->sender_, 0, 0, ""));
                 put_lock.unlock();
@@ -324,5 +383,22 @@ DataFrame* DataFrame::fromScalar(Key* k, KDStore* kv, double val) {
     r.set(0, val);
     ret->add_row(r);
     kv->put(*k, ret);
+    return ret;
+}
+
+DataFrame* DataFrame::fromVisitor(Key* k, KDStore* kv,char* schema, Writer& w) {
+    Schema s(schema);
+    DataFrame* ret = new DataFrame(s);
+    Row r(s);
+    while(!w.done()) {
+        w.visit(r);
+        //printf("GETS HERE WRITERS\n");
+        ret->add_row(r);
+    }
+    if (w.distributed()) {
+        kv->distributed_put(*k,ret);
+    } else {
+        kv->put(*k,ret);
+    }
     return ret;
 }

@@ -5,8 +5,34 @@
 #include <assert.h>
 #include <stdio.h>
 #include "helpers/serial.h"
+#include "helpers/helper.h"
+#include "helpers/object.h"
+#include "helpers/string.h"
+#include "KDStore/keyvalue.h"
+#include "network/thread.h"
+#include "helpers/array.h"
+#include "KDStore/map.h"
+#include "KDStore/newmap.h"
+#include "network/thread.h"
+#include <time.h>
+#include "arg.h"
+#include "network/message.h"
+#include "network/network_ifc.h"
+#include "network/network_pseudo.h"
+#include "network/network_ip.h"
 #include "DataFrame/schema.h"
 #include "DataFrame/column.h"
+#include "DataFrame/row.h"
+#include "application/reader.h"
+#include "application/writer.h"
+#include "DataFrame/dataframe.h"
+#include "KDStore/kdstore.h"
+#include "application/application.h"
+#include "application/wordcount.h"
+//#include "application/linus.h"
+#include <time.h>
+
+Args arg;
 
 
 
@@ -22,18 +48,22 @@ void serialize_boolarr();
 void serialize_column();
 void test_schema_serialize();
 void test_char_write();
+void serialize_cols();
+void serialize_chunks();
 
 int main() {
     testwritesandreads();
     serialize_string();
     test_char_write();
-    //serialize_stringarr();
+    serialize_stringarr();
     serialize_intarr();
     serialize_doubarr();
     serialize_floatarr();
     serialize_boolarr();
     serialize_column();
     test_schema_serialize();
+    serialize_chunks();
+    serialize_cols();
     printf("ALL TESTS PASS\n");
 }
 
@@ -126,6 +156,52 @@ void serialize_string() {
     Deserializer dser(ser.data_,ser.length_);
     String s1(dser);
     assert(s.equals(&s1));
+}
+
+void serialize_stringarr() {
+    String* a = new String("Rahul");
+    String* b  = new String("Rahul");
+    String* c = new String("Rahul");
+    StrArray* d = new StrArray();
+    d->add(a);
+    d->add(b);
+    d->add(c);
+    Serializer s1;
+    d->serialize(s1);
+    Deserializer d1(s1.data_,s1.length_);
+    StrArray* d2 = new StrArray(d1);
+    assert(d2->get(0)->equals(d2->get(0)));
+}
+
+void serialize_chunks() {
+    String* a = new String("Rahul");
+    String* b  = new String("Rahul");
+    String* c = new String("Rahul");
+    StringChunk* d = new StringChunk();
+    d->push_back(a);
+    d->push_back(b);
+    d->push_back(c);
+    Serializer s1;
+    d->serialize(s1);
+    Deserializer d1(s1.data_,s1.length_);
+    StringChunk* d2 = new StringChunk(d1);
+    assert(d2->get(0)->equals(d2->get(0)));
+}
+
+void serialize_cols() {
+    String* a = new String("Rahul");
+    String* b  = new String("Rahul");
+    String* c = new String("Rahul");
+    StringColumn* d = new StringColumn();
+    d->push_back(a);
+    d->push_back(b);
+    d->push_back(c);
+    Serializer s1;
+    d->serialize(s1);
+    Deserializer d1(s1.data_,s1.length_);
+    StringColumn* d2 = new StringColumn(d1);
+    printf("PRINTS THIS OUT %s\n",d2->get(0)->cstr_);
+    assert(d2->get(0)->equals(d2->get(0)));
 }
 
 void testwritesandreads() {

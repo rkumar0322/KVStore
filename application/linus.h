@@ -1,4 +1,3 @@
-#include "application.h"
 
 /**
  * The input data is a processed extract from GitHub.

@@ -3,7 +3,6 @@
 #include <cstring>
 #include <string>
 #include <cassert>
-#include "object.h"
 
 /** An immutable string class that wraps a character array.
  * The character array is zero terminated. The size() of the
@@ -42,11 +41,11 @@ public:
     }
 
     /** Build a string from another String */
-    String(String & from):
-            Object(from) {
+    String(String& from) {
         size_ = from.size_;
         cstr_ = new char[size_ + 1]; // ensure that we copy the terminator
         memcpy(cstr_, from.cstr_, size_ + 1);
+
     }
 
     String(Deserializer &ser) {
@@ -60,6 +59,13 @@ public:
     void serialize(Serializer &ser) {
         ser.write_size_t(size_);
         ser.write_chars(cstr_,size_);
+    }
+
+    void update_fields(char const* cstr, size_t len) {
+        size_ = len;
+        cstr_ = new char[size_ + 1];
+        memcpy(cstr_, cstr, size_ + 1);
+        cstr_[size_] = 0; // terminate
     }
 
     /** Return the number characters in the string (does not count the terminator) */
@@ -89,6 +95,7 @@ public:
     /** This consumes cstr_, the String must be deleted next */
     char * steal() {
         char *res = cstr_;
+        //printf("CSTR %s\n",res);
         cstr_ = nullptr;
         return res;
     }
@@ -114,12 +121,20 @@ public:
         val_ = new char[capacity_ = 10];
         size_ = 0;
     }
+    StrBuff(char* x) {
+        val_ = new char[strlen(x) + 1];
+        memcpy(val_,x,strlen(x));
+        val_[strlen(x)+1] = 0;
+        size_ = strlen(val_);
+        capacity_ = size_ * 2;
+    }
     void grow_by_(size_t step) {
         if (step + size_ < capacity_) return;
         capacity_ *= 2;
         if (step + size_ >= capacity_) capacity_ += step;
         char* oldV = val_;
         val_ = new char[capacity_];
+        printf("%s\n",oldV);
         memcpy(val_, oldV, size_);
         delete[] oldV;
     }
@@ -138,7 +153,8 @@ public:
         grow_by_(1);     // ensure space for terminator
         val_[size_] = 0; // terminate
         String *res = new String(true, val_, size_);
-        val_ = nullptr; // val_ was consumed above
+        val_ = val_ = new char[capacity_ = 10];
+        size_ = 0; // val_ was consumed above
         return res;
     }
 };

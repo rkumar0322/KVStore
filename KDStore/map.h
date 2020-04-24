@@ -1,8 +1,4 @@
-#pragma once 
-
-#include "../helpers/object.h"
-#include "keyvalue.h"
-#include "../DataFrame/dataframe.h"
+#pragma once
 
 //A map stores a list of keys and a list of values.
 //Key and value at the same index in the list are paired.

@@ -5,13 +5,7 @@
 
 
 class KDStore;
-#include "schema.h"
-#include "column.h"
-#include "row.h"
-#include "../helpers/serial.h"
-#include <stdio.h>
-#include <thread>
-#include "../KDStore/keyvalue.h"
+
 
 /****************************************************************************
  * DataFrame::
@@ -66,13 +60,17 @@ public:
 
     /**Deconstructor*/
     ~DataFrame() {
-        delete s;
         for (int i = 0; i < num;i++) {
             if(s->col_type(i) == 'D') {
                 DoubleColumn* d = data[i]->as_double();
                 delete d;
             }
+            else if(s->col_type(i) == 'S') {
+                StringColumn* d = data[i]->as_string();
+                delete d;
+            }
         }
+        delete s;
         delete[] data;
     }
 
@@ -138,15 +136,27 @@ public:
     /** Adds a column this dataframe, updates the schema, the new column
       * is external, and appears as the last column of the dataframe, the
       * name is optional and external. A nullptr colum is undefined. */
-    void add_column(Column* col) {
+    void add_string_column(StringColumn* col) {
         if (col != nullptr) {
-            data[s->column_num] = col;
-            s->add_column(col->get_type());
-            num++;
+            data[0] = col;
         } else {
             exit(1);
         }
     }
+
+
+    /** Adds a column this dataframe, updates the schema, the new column
+      * is external, and appears as the last column of the dataframe, the
+      * name is optional and external. A nullptr colum is undefined. */
+    void add_int_column(IntColumn* col) {
+        if (col != nullptr) {
+            data[0] = col;
+        } else {
+            exit(1);
+        }
+    }
+
+
 
     /** Return the value at the given column and row. Accessing rows or
      *  columns out of bounds, or request the wrong type is undefined.*/
@@ -228,7 +238,7 @@ public:
         }
     }
 
-    void set(size_t col, size_t row, String val) {
+    void set(size_t col, size_t row, String* val) {
         if(col < s->column_num && data[col]->get_type() == 'S') {
             if(row < s->row_num) {
                 data[col]->as_string()->set(row, val);
@@ -253,7 +263,9 @@ public:
     void add_row(Row& row) {
         for (size_t i = 0; i < row.num;i++) {
             if (s->column_types->cstr_[i] == 'S') {
-                //data[i]->as_string()->push_back(row.get_string(i));
+                String* s1 = row.get_string(i);
+                StringColumn* b = data[i]->as_string();
+                b->push_back(new String(s1->cstr_));
             } else if (s->column_types->cstr_[i] == 'I') {
                 data[i]->as_int()->push_back(row.get_int(i));
             } else if (s->column_types->cstr_[i] == 'B') {
@@ -278,6 +290,48 @@ public:
     size_t ncols() {
         return s->width();
     }
+
+    /** Set the fields of the given row object with values from the columns at
+      * the given offset.  If the row is not form the same schema as the
+      * dataframe, results are undefined.
+      */
+    void fill_row(size_t idx, Row& row) {
+        for (int i = 0; i < row.num;i++) {
+            if (row.col_type(i) == 'S') {
+                row.set(i, *data[i]->as_string()->get(idx));
+            } else if (row.col_type(i) == 'I') {
+                row.set(i, data[i]->as_int()->get(idx));
+            } else if (row.col_type(i) == 'B') {
+                row.set(i, data[i]->as_bool()->get(idx));
+            } else if (row.col_type(i) == 'F') {
+                row.set(i, data[i]->as_float()->get(idx));
+            }
+        }
+    }
+
+    void local_map(Reader& r) {
+        Schema s1(s->column_types->cstr_);
+        Row ro(s1);
+        for (int i = 0; i < s->row_num; i++) {
+            //printf("MAKES IT: %d\n",i);
+            //printf("MAKES IT: %d\n",s->row_num);
+            fill_row(i,ro);
+            //printf("MAKES IT: %s\n",ro.get_string(0)->cstr_);
+            r.visit(ro);
+        }
+        //printf("FINISHES THE MAP\n");
+    }
+
+    void map(Reader &r) {
+        Schema s1(s->column_types->cstr_);
+        Row ro(s1);
+        for (int i = 0; i < s->row_num; i++) {
+            fill_row(i,ro);
+            r.visit(ro);
+        }
+    }
+
     static DataFrame* fromArray(Key* k, KDStore* kv, size_t num, double* vals);
     static DataFrame* fromScalar(Key* k, KDStore* kv, double val);
+    static DataFrame* fromVisitor(Key* k, KDStore* kv,char* schema, Writer& w);
 };

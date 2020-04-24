@@ -106,7 +106,7 @@ class Schema : public Object {
 
   /** Return type of column at idx. An idx >= width is undefined. */
   char col_type(size_t idx) {
-	  return 'D';
+	  return column_types->cstr_[idx];
   }
 
   /** The number of columns */

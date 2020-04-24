@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../helpers/object.h"
 #include "../helpers/string.h"
 
 /**A key is part of kvstore which contains a string and a node index*/
@@ -11,16 +10,30 @@ class Key: public Object {
 
 		Key() {}
 
+		Key(Key* k) {
+		    key_ = new String(*k->key_);
+		    nodeidx = k->nodeidx;
+		    //printf("KEY VALUES\n");
+            //printf("size: %d\n",nodeidx);
+            //printf("size: %s\n",key_->cstr_);
+		}
+
 		/**Constructor*/
-		Key(String* key, size_t s) {
-			this->key_ = key;
+		Key(String key, size_t s) {
+			this->key_ = &key;
 			this->nodeidx = s;
 		}
 
-		Key(const char* key, size_t s) {
+		Key(const char* key) {
 		    key_ = new String(key);
-		    nodeidx = s;
+		    nodeidx = 0;
 		}
+
+        Key(const char* key, size_t s) {
+        key_ = new String(key);
+        nodeidx = s;
+        }
+
 		Key(Deserializer &dser) {
             nodeidx = dser.read_size_t();
 		    key_ = new String(dser);
@@ -45,7 +58,41 @@ class Key: public Object {
 			return key_->equals(s) &&
 				(nodeidx == k->nodeidx);
 		}
+
+		size_t nodeidx_() {
+		    return nodeidx;
+		}
 };
+
+class KeyBuff : public Object {
+public:
+    Key* orig_; // external
+    StrBuff buf_;
+    KeyBuff(Key* orig) : orig_(orig), buf_(orig->key_->cstr_) {
+    }
+
+    KeyBuff& c(String &s) {
+        buf_.c(s);
+        return *this;
+    }
+    KeyBuff& c(size_t v) {
+        buf_.c(v);
+        orig_->nodeidx = v;
+        return *this;
+    }
+    KeyBuff& c(const char* v) {
+        buf_.c(v);
+        return *this;
+    }
+
+    Key* get() {
+            String* s = buf_.get();
+            buf_.c(orig_->key_->cstr_);
+            Key* k = new Key(s->steal(), orig_->nodeidx_());
+            delete s;
+            return k;
+    }
+}; // KeyBuff
 
 
 

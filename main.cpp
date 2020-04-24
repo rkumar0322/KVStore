@@ -2,10 +2,55 @@
 // Created by Rahul Kumar on 4/6/20.
 //
 
+//
+// Created by Rahul Kumar on 4/6/20.
+//
+#include "helpers/serial.h"
+#include "helpers/helper.h"
+#include "helpers/object.h"
+#include "helpers/string.h"
+#include "KDStore/keyvalue.h"
 #include "network/thread.h"
+#include "helpers/array.h"
+#include "KDStore/map.h"
+#include "KDStore/newmap.h"
+#include "network/thread.h"
+#include <time.h>
+#include "arg.h"
+#include "network/message.h"
+#include "network/network_ifc.h"
+#include "network/network_pseudo.h"
+#include "network/network_ip.h"
+#include "DataFrame/schema.h"
+#include "DataFrame/column.h"
+#include "DataFrame/row.h"
+#include "application/reader.h"
+#include "application/writer.h"
+#include "DataFrame/dataframe.h"
+#include "KDStore/kdstore.h"
 #include "application/application.h"
+#include "application/wordcount.h"
+//#include "application/linus.h"
 #include <time.h>
 
+Args arg;
+
+
+NetworkIfc* initialize() {
+    if (arg.pseudo) {
+        //LOG("Initializing pseudo network\n");
+        return new NetworkPseudo();
+    } else {
+        //LOG("Initializing IP network...\n");
+        NetworkIp* res = new NetworkIp();
+        if (arg.index == 0) {
+            res->server_init(arg.index,arg.port);
+        } else {
+            res->client_init(arg.index,arg.port,arg.master_ip,arg.master_port);
+        }
+        return res;
+    }
+}
 
 
 
@@ -26,6 +71,20 @@ public:
     }
 
 };
+
+Application* pick(size_t i,NetworkIfc& net) {
+    if (strcmp(arg.app,"demo") == 0) {
+        return new Demo(i,net);
+    } else if (strcmp(arg.app,"wc") == 0) {
+        return new WordCount(i,net);
+    } else if (strcmp(arg.app,"triv") == 0) {
+        return new Trivial(i,net);
+    } else if (strcmp(arg.app,"linus") == 0) {
+        //return new Linus(net, i);
+    } else {
+        exit(1);
+    }
+}
 
 class Producer: public Thread {
 public:
@@ -61,35 +120,50 @@ int main3() {
     return 0;
 }
 
-int main() {
-    NetworkPseudo network(3);
-    Application* a1 = new Demo(network,0);
-    Producer* p1 = new Producer(a1);
-    Consumer* c1 = new Consumer(a1);
-    Application* a2 = new Demo(network,1);
-    Producer* p2 = new Producer(a2);
-    Consumer* c2 = new Consumer(a2);
-    Application* a3 = new Demo(network,2);
-    Producer* p3 = new Producer(a3);
-    Consumer* c3 = new Consumer(a3);
-    p1->start();
-    p2->start();
-    p3->start();
-    c1->start();
-    c2->start();
-    c3->start();
-    p1->join();
-    p2->join();
-    p3->join();
-    c1->join();
-    c2->join();
-    c3->join();
-    delete p1;
-    delete c1;
-    delete a1;
-    delete p2;
-    delete c2;
-    delete a2;
+int main(int argc, char** argv) {
+    arg.parse(argc,argv);
+    printf("makes it here\n");
+    NetworkIfc* network = initialize();
+    assert(arg.num_nodes != 0 && "Cannot have empty cloud.");
+    try {
+        if (arg.pseudo) {
+            Producer** p = new Producer*[arg.num_nodes];
+            Consumer** c = new Consumer*[arg.num_nodes];
+            for (int i = 0; i < arg.num_nodes; i++) {
+                Application* a1 = pick(i,*network);
+                Producer* p1 = new Producer(a1);
+                Consumer* c1 = new Consumer(a1);
+                c[i] = c1;
+                p[i] = p1;
+            }
+            for (int i = 0; i < arg.num_nodes; i++) {
+                p[i]->start();
+            }
+            for (int i = 0; i < arg.num_nodes; i++) {
+                c[i]->start();
+            }
+            for (int i = 0; i < arg.num_nodes; i++) {
+                p[i]->join();
+            }
+            for (int i = 0; i < arg.num_nodes; i++) {
+                c[i]->join();
+            }
+        } else {
+            {
+                Application* app = pick(arg.index,*network);
+                Producer* producers = new Producer(app);
+                Consumer* consumers = new Consumer(app);
+                producers->start();
+                consumers->start();
+                producers->join();
+                consumers->join();
+            }
+        }
+    } catch (std::exception const &e) {
+    } catch(...) {
+        LOG("ERROR: Unknown");
+    }
+    delete network;
 }
 
 void basic_example() {

@@ -1,6 +1,4 @@
 #pragma once
-#include "../helpers/object.h"
-#include "../helpers/string.h"
 //#include <unistd.h>
 #include <stdio.h>
 #include <string>
@@ -40,16 +38,17 @@ class Message : public Object {
     size_t id_;     // an id t unique within the node
 
     size_t msgsize_;
+    String* type;
 
     char* data_;
 
 
     Message(Deserializer &d) {
         sender_ = d.read_size_t();
+        printf("MAKES IT HERE %d\n", sender_);
         target_ = d.read_size_t();
-        id_ = d.read_size_t();
-        msgsize_ = d.read_size_t();
-        data_ = d.read_chars(msgsize_);
+        printf("MAKES IT HERE %d\n", target_);
+        type = new String(d);
     }
 
     Message(MsgKind kind, size_t sender, size_t target, size_t id, size_t msgsize,char* data) {
@@ -58,15 +57,17 @@ class Message : public Object {
         sender_ = sender;
         extra_target = target;
         target_ = target;
-
         id_ = id;
         msgsize_ = msgsize;
         data_ = data;
+        type = new String("Message");
     }
 
     void serialize(Serializer &ser) {
         ser.write_size_t(sender_);
         ser.write_size_t(target_);
+        type->serialize(ser);
+        ser.write_size_t(extra_target);
         ser.write_size_t(id_);
         ser.write_size_t(msgsize_);
         ser.write_chars(data_,msgsize_);
@@ -174,11 +175,49 @@ class Status : public Message {
 class Register : public Message {
 public:
 
-    struct sockaddr_in client;
     size_t port;
+    size_t idx;
+    size_t sender_;
+    size_t target_;
+    String* ip_addr;
+    String* type;
 
-    Register(unsigned idx, unsigned port) {
+    Register(size_t sender_, size_t target_, unsigned idx, unsigned port, char* ip_addr_) {
         port = port;
+        idx = idx;
+        ip_addr = new String(ip_addr_);
+        sender_ = sender_;
+        target_ = target_;
+        type = new String("REGISTER");
+
+    }
+
+    Register(Deserializer& d) {
+        sender_ = d.read_size_t();
+        printf("MAKES IT HERE %d\n", sender_);
+        target_ = d.read_size_t();
+        printf("MAKES IT HERE %d\n", target_);
+        type = new String(d);
+        port = d.read_size_t();
+        printf("MAKES IT HERE %d\n", port);
+        idx = d.read_size_t();
+        printf("MAKES IT HERE %d\n", idx);
+        ip_addr = new String(d);
+        printf("MAKES IT HERE %d\n", ip_addr);
+    }
+
+    void serialize(Serializer& ser) {
+        ser.write_size_t(sender_);
+        printf("MAKES IT HERE %d\n", sender_);
+        ser.write_size_t(target_);
+        printf("MAKES IT HERE %d\n", target_);
+        type->serialize(ser);
+        ser.write_size_t(port);
+        printf("MAKES IT HERE %d\n", port);
+        ser.write_size_t(idx);
+        printf("MAKES IT HERE %d\n", idx);
+        ip_addr->serialize(ser);
+        printf("MAKES IT HERE %d\n", ip_addr);
     }
 
     int sender() {return 0;}
@@ -186,8 +225,7 @@ public:
    
 };
 
- 
-/*
+
 class Directory : public Message {
 
     public:
@@ -254,6 +292,5 @@ class Directory : public Message {
         return buf; 
 
    }
-
-};
 */
+};

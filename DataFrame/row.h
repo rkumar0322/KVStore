@@ -2,8 +2,6 @@
 // Created by Rahul Kumar on 2/13/20.
 //
 #pragma once
-#include "schema.h"
-#include "column.h"
 #include "math.h"
 
 #ifndef SUBMISSION_ROWER_H
@@ -38,7 +36,7 @@ class Row : public Object {
 		  }
 		  else if (types[i] == 'I') {
                           data[i] = new IntColumn();
-                          data[i]->as_bool()->push_back(1);
+                          data[i]->as_int()->push_back(1);
                   }
 		  else if (types[i] == 'B') {
                           data[i] = new BoolColumn();
@@ -59,6 +57,10 @@ class Row : public Object {
       for (int i = 0; i < num;i++) {
           if(s.col_type(i) == 'D') {
               DoubleColumn* d = data[i]->as_double();
+              data[i] = nullptr;
+              delete d;
+          } else if(s.col_type(i) == 's') {
+              StringColumn* d = data[i]->as_string();
               data[i] = nullptr;
               delete d;
           }
@@ -95,7 +97,8 @@ class Row : public Object {
   /** The string is external. */
   void set(size_t col, String val) {
 	  if(types[col] == 'S') {
-          data[col]->as_string()->set(0, val);
+	      String* s = new String(val.cstr_,val.size_);
+          data[col]->as_string()->set(0, s);
       }
   }
  

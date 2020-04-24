@@ -1,7 +1,3 @@
-#include "thread.h"
-#include "../KDStore/map.h"
-#include "message.h"
-#include "network_ifc.h"
 #include <set>
 class MessArrayQ : public Array {
 public:
@@ -135,13 +131,16 @@ class NetworkPseudo : public NetworkIfc {
 public:
     String_size_t_Map* threads_;
     MQArray* qs_;
-    size_t index_;
     Lock lock;
 
     NetworkPseudo(size_t num_nodes) {
         qs_ = new MQArray(num_nodes);
         threads_ = new String_size_t_Map();
-        index_ = num_nodes;
+    }
+
+    NetworkPseudo() {
+        qs_ = new MQArray(arg.num_nodes);
+        threads_ = new String_size_t_Map();
     }
 
     ~NetworkPseudo() {
@@ -152,7 +151,7 @@ public:
     void register_node(size_t idx) override {
         String* tid = Thread::thread_id();
         threads_->set_u(*tid,idx);
-        if (threads_->len == 7) {
+        if (threads_->len == (qs_->len * 2) +1) {
             lock.notify_all();
         }
     }
@@ -163,7 +162,7 @@ public:
 
     Message* recv_m() override {
         lock.lock();
-        if (threads_->len != 7) {
+        if (threads_->len != (qs_->len * 2) +1) {
             lock.wait();
         }
         String* tid = Thread::thread_id();
@@ -183,7 +182,10 @@ public:
     }
 
     size_t index() {
-        return index_;
+        String* tid = Thread::thread_id();
+        size_t i = threads_->get(*tid);
+        delete tid;
+        return i;
     }
 
 

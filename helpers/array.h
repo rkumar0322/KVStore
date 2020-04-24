@@ -1,8 +1,6 @@
 //
 // Created by Rahul Kumar on 2/13/20.
-//
-#include "serial.h"
-#include "string.h"
+
 
 class Array : public Object
 {
@@ -14,10 +12,13 @@ public:
      * @brief Construct a new Array object
      *
      */
-    Array() : Object() {
-        arr=new Object*[10];
+
+    Array()  {
         len = 0;
-        capacity_ = 10;
+        arr=new Object*[capacity_];
+        for (int i = 0; i < capacity_;i++) {
+            arr[i] = new Object();
+        }
     }
 
     Array(size_t cap) {
@@ -27,7 +28,6 @@ public:
     }
 
     ~Array() {
-        delete[] arr;
     }
 
     Array(Deserializer &ser) {
@@ -113,21 +113,30 @@ public:
      */
     bool add(Object *o, size_t index) {
         if (typeid(o)==(typeid(arr[0])) == true) {
-            Object **newarr = new Object *[capacity_ * 2];
-            for (size_t i = 0; i < index; i++) {
-                newarr[i] = arr[i];
+            if (len > capacity_) {
+                Object **newarr = new Object *[capacity_ * 2];
+                size_t i = 0;
+                for (i; i < index; i++) {
+                    newarr[i] = arr[i];
+                }
+                newarr[index] = o;
+                for (i = index; i < len; i++) {
+                    newarr[i+1] = arr[i];
+                }
+                delete[] arr;
+                arr = newarr;
+                len += 1;
+                capacity_ *= 2;
+                return true;
             }
-            newarr[index] = o;
-            for (size_t i = index; i < len; i++) {
-                newarr[i+1] = arr[i];
-            }
-            delete[] arr;
-            arr = newarr;
-            len += 1;
-            capacity_ *= 2;
-            return true;
         } else {
-            return false;
+            size_t i = 0;
+            arr[index] = o;
+            for (i = index; i < len; i++) {
+                arr[i+1] = arr[i];
+            }
+            len += 1;
+            return true;
         }
     }
 
@@ -337,38 +346,47 @@ public:
 class StrArray : public Object
 {
 public:
-    String* arr;
+    String** arr;
     size_t len;
     size_t capacity_=10;
 
-    StrArray() : Object() {
+    StrArray()  {
         len = 0;
-        arr= new String[20];
+        arr=new String*[capacity_];
+        for (int i = 0; i < capacity_;i++) {
+            arr[i] = new String("");
+        }
     }
 
     ~StrArray() {
         delete[] arr;
     }
 
-    StrArray(size_t cap) : Object() {
-        arr=new String[cap * 2];
+    StrArray(size_t cap) {
+        arr=new String*[cap * 2];
         len = cap;
         capacity_ = cap * 2;
     }
 
     StrArray(Deserializer &ser) {
+        //printf("MAKES IT HERE\n");
         len = ser.read_size_t();
-        arr = new String[len * 2];
-        for (size_t i = 0; i < len;i++) {
-            arr[i] = String(ser);
+        //printf("MAKES IT HERE %d\n", len);
+        arr = new String*[len * 2];
+        for (int i = 0; i < len;i++) {
+            String* a = new String(ser);
+            //printf("MAKES IT HERE %s\n", a->cstr_);
+            arr[i] = a;
         }
         capacity_ = len * 2;
+        //printf("MAKES IT HERE %s\n", arr[0]->cstr_);
     }
 
     void serialize(Serializer &ser) {
         ser.write_size_t(len);
-        for (size_t i = 0; i < len;i++) {
-            arr[i].serialize(ser);
+        for (int i = 0; i < len;i++) {
+            String* s = arr[i];
+            s->serialize(ser);
         }
     }
 
@@ -378,9 +396,61 @@ public:
      * @return true if the String was added successfully
      * @return false if the String was NOT added successfully
      */
-    bool add(String o) {
-        arr[len] = o;
-        return true;
+    bool add(String *o){
+        if (len >= capacity_) {
+            String ** newarr = new String*[capacity_ * 2];
+            int i = 0;
+            for (i; i < len;i++) {
+                newarr[i] = arr[i];
+            }
+            for (i =len; i < capacity_ * 2;i++) {
+                newarr[i] = new String("");
+            }
+            String* x = newarr[len];
+            delete x;
+            newarr[len] = o;
+            delete [] this->arr;
+            arr = newarr;
+            len += 1;
+            capacity_ = capacity_ * 2;
+            return true;
+        } else {
+            String* i = arr[len];
+            delete i;
+            arr[len] = o;
+            len += 1;
+            return true;
+        }
+    }
+
+    /**
+     * @brief Adds a given String to the given index of the StrArray
+     *
+     * @note Pushes the elements at and after @param index down to the end by one index
+     *
+     * @param o the String to be added to this StrArray
+     * @param index the index at which the given String is to be added
+     * @return true if the String was added successfully
+     * @return false if the String was NOT added successfully
+     */
+    bool add(String *o, size_t index) {
+        if ((typeid(o)==(typeid(arr[0]))) == true) {
+            String **newarr = new String *[capacity_ * 2];
+            for (size_t i = 0; i < index; i++) {
+                newarr[i] = arr[i];
+            }
+            newarr[index] = o;
+            for (size_t i = index; i < len; i++) {
+                newarr[i+1] = arr[i];
+            }
+            delete[] arr;
+            arr = newarr;
+            len += 1;
+            capacity_ *= 2;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -393,13 +463,13 @@ public:
     bool addAll(StrArray *a) {
 
         if (typeid(a->arr[0]) == typeid(arr[0])) {
-            String* newarr = new String[(len + a->len) * 2];
+            String** newarr = new String*[(len + a->len) * 2];
             for (size_t i = 0; i < len;i++) {
-                String o = arr[i];
+                String* o = arr[i];
                 newarr[i] = o;
             }
             for (size_t i = 0; i < a->len;i++) {
-                String o = a->arr[i];
+                String* o = a->arr[i];
                 newarr[i+len] = o;
             }
             len += a->len;
@@ -425,22 +495,22 @@ public:
      */
     bool addAll(StrArray *a, size_t index) {
         if (typeid(a->arr[0]) == typeid(arr[0])) {
-            String* newarr = new String[(len + a->len) * 2];
+            String** newarr = new String*[(len + a->len) * 2];
             for (size_t i = 0; i < index;i++) {
                 if (len > 0) {
-                    String o = arr[i];
+                    String* o = arr[i];
                     newarr[i] = o;
                 }
             }
             for (size_t i = 0; i < a->len;i++) {
                 if (a->len > 0) {
-                    String o = a->arr[i];
+                    String* o = a->arr[i];
                     newarr[i+index] = o;
                 }
             }
             for (size_t i = index; i < len;i++) {
                 if (len > 0) {
-                    String o = arr[i];
+                    String* o = arr[i];
                     newarr[i+a->len] = o;
                 }
             }
@@ -452,6 +522,16 @@ public:
         } else {
             return false;
         }
+    }
+
+    /**
+     * @brief Removes all Strings from this StrArray
+     */
+    void clear() {
+        delete [] arr;
+        arr=new String*[10];
+        len = 0;
+        capacity_ = 10;
     }
 
     /**
@@ -475,10 +555,10 @@ public:
      * @brief Gets the String at the given index of this StrArray
      *
      * @param index the index in this StrArray from which to get the String
-     * @return String the String at the given index in this StrArray
+     * @return String* the String at the given index in this StrArray
      */
-    String* get(size_t index) {
-        return &arr[index];
+    String *get(size_t index) {
+        return arr[index];
     }
 
     /**
@@ -498,10 +578,10 @@ public:
      * @return int the index in this StrArray at which an String that is equals() to the given String exists,
      * or -1 if such an String does not exist in this StrArray
      */
-    int indexOf(String o) {
+    int indexOf(String *o) {
         int x = -1;
         for (size_t i = 0; i < len;i++) {
-            if (o.equals(&arr[i])) {
+            if (o->equals(arr[i])) {
                 x = i;
                 break;
             }
@@ -515,10 +595,10 @@ public:
      * @note Pulls the elements at and after @param index up to the front by one index
      *
      * @param index the index in this StrArray at which to remove the String
-     * @return String the removed String
+     * @return String* the removed String
      */
-    String remove(size_t index) {
-        String o = arr[index];
+    String *remove(size_t index) {
+        String* o = arr[index];
         for (size_t i = index; i < len;i++) {
             arr[i] = arr[i+1];
         }
@@ -531,13 +611,13 @@ public:
      *
      * @param o the String to be set at the given index in this StrArray
      * @param index the index at which to set the given String, and remove the old String
-     * @return String the String that was replaced in this StrArray. If there was no String at the given index,
+     * @return String* the String that was replaced in this StrArray. If there was no String at the given index,
      * returns nullptr
      */
-    String set(String o, size_t index) {
-        String o1 = arr[index];
+    void set(String *o, size_t index) {
+        String* o1 = arr[index];
         arr[index] = o;
-        return o1;
+        delete o1;
     }
 
     /**
@@ -548,6 +628,7 @@ public:
         return len;
     }
 };
+
 
 class IntArray : public Object
 {

@@ -1,6 +1,4 @@
 
-#include "../helpers/helper.h"
-#include "../helpers/array.h"
 #pragma once
 class IntColumn;
 class BoolColumn;
@@ -49,7 +47,8 @@ public:
     virtual void push_back(double val) {
         assert(0);
     }
-    virtual void push_back(String val) {
+    virtual void push_back(String* val) {
+        printf("GETS TO THIS POINT\n");
         assert(0);
     }
 
@@ -77,28 +76,27 @@ public:
     }
 };
 
-
-class IntColumn : public Column {
+class IntChunk : public Object {
 public:
 
     IntArray* arr;
 
-    IntColumn() : Column() {
+    IntChunk() {
         this->arr = new IntArray();
     }
-    IntColumn(int n, ...){
+    IntChunk(int n, ...){
 
     }
-    IntColumn(Deserializer &dser) {
+    IntChunk(Deserializer &dser) {
         arr = new IntArray(dser);
     }
-    ~IntColumn() {
+    ~IntChunk() {
 
     }
     int get(size_t idx) {
         return arr->get(idx);
     }
-    IntColumn* as_int() {
+    IntChunk* as_int() {
         return this;
     }
     /** Set value at idx. An out of bound idx is undefined.  */
@@ -113,6 +111,128 @@ public:
     }
     void serialize(Serializer &ser) {
         arr->serialize(ser);
+    }
+};
+
+/*************************************************************************
+ * INTColumn::
+ * Holds string pointers. The strings are external.  Nullptr is a valid
+ * value.
+ */
+class IntColumn : public Column {
+public:
+    IntChunk** arr;
+    size_t chunks_;
+    size_t cap_;
+    size_t len;
+    size_t internal_chunk;
+
+    IntColumn() {
+        arr = new IntChunk*[10];
+        for (int i = 0; i < 10;i++) {
+            arr[i] = new IntChunk();
+        }
+        len = 0;
+        chunks_ = 0;
+        internal_chunk = 10;
+        cap_ = 10 * arg.rows_per_chunk;
+    }
+    IntColumn(int n, ...) {
+
+    }
+    IntColumn(Deserializer &dser) {
+        len = dser.read_size_t();
+        chunks_ = dser.read_size_t();
+        cap_ = dser.read_size_t();
+        internal_chunk = dser.read_size_t();
+        arr = new IntChunk*[internal_chunk];
+        for (int i = 0; i < chunks_;i++) {
+            printf("chunks %d\n",chunks_);
+            printf("START OF DEBUGGING COLUMNS\n");
+            IntChunk* a = new IntChunk(dser);
+            arr[i] = a;
+            printf("FINISH OF DEBUGGING COLUMNS\n");
+        }
+    }
+
+    void serialize(Serializer &ser) {
+        ser.write_size_t(len);
+        ser.write_size_t(chunks_);
+        ser.write_size_t(cap_);
+        ser.write_size_t(internal_chunk);
+        for (int i = 0; i < chunks_;i++) {
+            IntChunk* s1 = arr[i];
+            s1->serialize(ser);
+        }
+    }
+    IntColumn* as_int() {
+        return this;
+    }
+    /** Returns the string at idx; undefined on invalid idx.*/
+    int get(size_t idx) {
+        return arr[idx / arg.rows_per_chunk]->get(idx % arg.rows_per_chunk);
+    }
+    /** Out of bound idx is undefined. */
+    void set(size_t idx, int val) {
+        arr[idx / arg.rows_per_chunk]->set(idx % arg.rows_per_chunk,val);
+    }
+    size_t size() {
+        return len;
+    }
+    void push_back(int val) {
+        if (len >= cap_) {
+            IntChunk ** newarr = new IntChunk*[internal_chunk * 2];
+            int i = 0;
+            for (i; i < internal_chunk;i++) {
+                newarr[i] = arr[i];
+            }
+            for (i; i < internal_chunk * 2;i++) {
+                newarr[i] = new IntChunk();
+            }
+            for (int i = 0; i < internal_chunk;i++) {
+                delete arr[i];
+            }
+            delete[] arr;
+            internal_chunk *= 2;
+            arr = newarr;
+            cap_ = cap_ * 2;
+        }
+        arr[len / arg.rows_per_chunk]->push_back(val);
+        len += 1;
+        if (len > 0) {
+            chunks_ = len / arg.rows_per_chunk + 1;
+        } else {
+            chunks_ = 0;
+        }
+    }
+
+    void add_chunk(IntChunk* s) {
+        if (chunks_ >= internal_chunk) {
+            IntChunk ** newarr = new IntChunk*[internal_chunk * 2];
+            int i = 0;
+            for (i; i < internal_chunk;i++) {
+                newarr[i] = arr[i];
+            }
+            for (i; i < internal_chunk * 2;i++) {
+                newarr[i] = new IntChunk();
+            }
+            for (int i = 0; i < internal_chunk;i++) {
+                delete arr[i];
+            }
+            delete[] arr;
+            internal_chunk *= 2;
+            arr = newarr;
+            arr[chunks_] = s;
+            chunks_ += 1;
+            cap_ = cap_ * 2;
+        } else {
+            arr[chunks_] = s;
+            chunks_ += 1;
+        }
+    }
+
+    IntChunk* get_chunk(size_t chunk) {
+        return arr[chunk];
     }
 };
 
@@ -239,19 +359,21 @@ public:
  * Holds string pointers. The strings are external.  Nullptr is a valid
  * value.
  */
-class StringColumn : public Column {
+class StringChunk : public Object {
 public:
     StrArray* arr;
-    StringColumn() {
+    StringChunk() {
         arr = new StrArray();
     }
-    StringColumn(int n, ...) {
+    StringChunk(int n, ...) {
 
     }
-    StringColumn(Deserializer &dser) {
+    StringChunk(Deserializer &dser) {
+        //printf("SOMEHOW GETS HERE\n");
         arr = new StrArray(dser);
+        //printf("SOMEHOW FINISHES HERE\n");
     }
-    StringColumn* as_string() {
+    StringChunk* as_string() {
         return this;
     }
     /** Returns the string at idx; undefined on invalid idx.*/
@@ -259,16 +381,138 @@ public:
         return arr->get(idx);
     }
     /** Out of bound idx is undefined. */
-    void set(size_t idx, String val) {
+    void set(size_t idx, String* val) {
         arr->set(val,idx);
     }
     size_t size() {
         return arr->size();
     }
-    void push_back(String val) {
+    void push_back(String* val) {
         arr->add(val);
     }
     void serialize(Serializer &ser) {
         arr->serialize(ser);
+    }
+};
+
+/*************************************************************************
+ * StringColumn::
+ * Holds string pointers. The strings are external.  Nullptr is a valid
+ * value.
+ */
+class StringColumn : public Column {
+public:
+    StringChunk** arr;
+    size_t chunks_;
+    size_t cap_;
+    size_t len;
+    size_t internal_chunk;
+
+    StringColumn() {
+        arr = new StringChunk*[10];
+        for (int i = 0; i < 10;i++) {
+            arr[i] = new StringChunk();
+        }
+        len = 0;
+        chunks_ = 0;
+        internal_chunk = 10;
+        cap_ = 10 * arg.rows_per_chunk;
+    }
+    StringColumn(int n, ...) {
+
+    }
+    StringColumn(Deserializer &dser) {
+        len = dser.read_size_t();
+        chunks_ = dser.read_size_t();
+        cap_ = dser.read_size_t();
+        internal_chunk = dser.read_size_t();
+        arr = new StringChunk*[internal_chunk];
+        for (int i = 0; i < chunks_;i++) {
+            //printf("chunks %d\n",chunks_);
+            //printf("START OF DEBUGGING COLUMNS\n");
+            StringChunk* a = new StringChunk(dser);
+            arr[i] = a;
+            //printf("FINISH OF DEBUGGING COLUMNS\n");
+        }
+    }
+
+    void serialize(Serializer &ser) {
+        ser.write_size_t(len);
+        ser.write_size_t(chunks_);
+        ser.write_size_t(cap_);
+        ser.write_size_t(internal_chunk);
+        for (int i = 0; i < chunks_;i++) {
+            StringChunk* s1 = arr[i];
+            s1->serialize(ser);
+        }
+    }
+    StringColumn* as_string() {
+        return this;
+    }
+    /** Returns the string at idx; undefined on invalid idx.*/
+    String* get(size_t idx) {
+        return arr[idx / arg.rows_per_chunk]->get(idx % arg.rows_per_chunk);
+    }
+    /** Out of bound idx is undefined. */
+    void set(size_t idx, String* val) {
+        arr[idx / arg.rows_per_chunk]->set(idx % arg.rows_per_chunk,val);
+    }
+    size_t size() {
+        return len;
+    }
+    void push_back(String* val) {
+        if (len >= cap_) {
+            StringChunk ** newarr = new StringChunk*[internal_chunk * 2];
+            int i = 0;
+            for (i; i < internal_chunk;i++) {
+                newarr[i] = arr[i];
+            }
+            for (i; i < internal_chunk * 2;i++) {
+                newarr[i] = new StringChunk();
+            }
+            for (int i = 0; i < internal_chunk;i++) {
+                delete arr[i];
+            }
+            delete[] arr;
+            internal_chunk *= 2;
+            arr = newarr;
+            cap_ = cap_ * 2;
+        }
+        arr[len / arg.rows_per_chunk]->push_back(val);
+        len += 1;
+        if (len > 0) {
+            chunks_ = len / arg.rows_per_chunk + 1;
+        } else {
+            chunks_ = 0;
+        }
+    }
+
+    void add_chunk(StringChunk* s) {
+        if (chunks_ >= internal_chunk) {
+            StringChunk ** newarr = new StringChunk*[internal_chunk * 2];
+            int i = 0;
+            for (i; i < internal_chunk;i++) {
+                newarr[i] = arr[i];
+            }
+            for (i; i < internal_chunk * 2;i++) {
+                newarr[i] = new StringChunk();
+            }
+            for (int i = 0; i < internal_chunk;i++) {
+                delete arr[i];
+            }
+            delete[] arr;
+            internal_chunk *= 2;
+            arr = newarr;
+            arr[chunks_] = s;
+            chunks_ += 1;
+            cap_ = cap_ * 2;
+        } else {
+            arr[chunks_] = s;
+            chunks_ += 1;
+        }
+    }
+
+    StringChunk* get_chunk(size_t chunk) {
+        return arr[chunk];
     }
 };

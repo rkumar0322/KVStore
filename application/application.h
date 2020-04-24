@@ -1,35 +1,25 @@
-#include "../helpers/object.h"
-#include "../KDStore/kdstore.h"
+#include "../helpers/helper.h"
 
-/** The user-level interface which is used for reading,
- * storing, retrieving and writing data.
- * It contains a KDStore which keep tracks of all nodes,
- * and a number which represents its index.
- * 
- * 
- **/ 
+
 class Application: public Object
 {
 public:
     KDStore kv;
     size_t index;
 
-    /**Constructor*/
     Application(size_t idx) : kv(idx) {
         index = idx;
 
     }
 
-    Application(NetworkIfc& ifc, size_t idx):kv(ifc,idx) {
+    Application(size_t idx,NetworkIfc& ifc):kv(ifc,idx) {
         index = idx;
     }
 
-    /** run the application*/
     virtual void run_() {
 
     }
 
-    /** return the index of the current application*/
     size_t this_node() {
         return index;
     }
@@ -37,10 +27,9 @@ public:
 
 };
 
-/** An example class for testing dataframe inside application*/
 class Trivial : public Application {
 public:
-    Trivial(NetworkIfc& ifc, size_t idx) :Application(ifc,idx) {}
+    Trivial(size_t idx,NetworkIfc& ifc) :Application(idx,ifc) {}
     Trivial(size_t idx) : Application(idx) { }
     void run_() {
         size_t SZ = 1000*1000;
@@ -60,17 +49,10 @@ public:
     }
 };
 
-/** A Demo class for testing different nodes running in the same application 
- * Use 3 nodes: producer, counter, summerizer 
-*/
 class Demo : public Application {
 public:
-
-    /**Constructor*/
     Demo(size_t idx): Application(idx) {}
-
-    /**Pass in a NetworkIfc to initialize the network inside application*/
-    Demo(NetworkIfc& ifc, size_t idx) :Application(ifc,idx) {}
+    Demo(size_t idx,NetworkIfc& ifc) :Application(idx,ifc) {}
 
     void run_() override {
         switch(this_node()) {
@@ -80,9 +62,6 @@ public:
         }
     }
 
-    /**create a large dataframe with data and a small
-     * dataframe with the sum.
-     */
     void producer() {
         Key main("main",0);
         Key verify("verif",0);
@@ -96,25 +75,26 @@ public:
         delete[] vals;
     }
 
-    /** get the dataframe and sum it*/
     void counter() {
         Key main("main",0);
         Key verify("verif",0);
         Key check("ck",0);
         DataFrame* v = kv.waitAndGet(main);
+        printf("DAT OBTAINED\n");
         size_t sum = 0;
         for (size_t i = 0; i < 100*1000; ++i) sum += v->get_double(0,i);
         p("The sum is  ").pln(sum);
         DataFrame::fromScalar(&verify, &kv, sum);
     }
 
-    /** get both sums from producer and counter, and output the result*/
     void summarizer() {
         Key main("main",0);
         Key verify("verif",0);
         Key check("ck",0);
         DataFrame* result = kv.waitAndGet(verify);
+        printf("DAT OBTAINED\n");
         DataFrame* expected = kv.waitAndGet(check);
+        printf("DAT OBTAINED\n");
         pln(expected->get_double(0,0)==result->get_double(0,0) ? "SUCCESS":"FAILURE");
     }
 };

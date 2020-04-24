@@ -12,8 +12,8 @@ public:
     size_t length_ = 0;
     size_t cap_;
     Serializer() {
-        data_ = new char[1024];
-        cap_ = 1024;
+        data_ = new char[100000];
+        cap_ = 100000;
     }
     ~Serializer() {
     }
