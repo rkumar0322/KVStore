@@ -1,4 +1,6 @@
-/****/
+/**
+ * Rower class for iterating through dataframes.
+ * **/
 class Writer: public Object {
 public:
 

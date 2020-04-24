@@ -368,6 +368,8 @@ public:
     StringChunk(int n, ...) {
 
     }
+
+    //Serializes this Chunk.
     StringChunk(Deserializer &dser) {
         //printf("SOMEHOW GETS HERE\n");
         arr = new StrArray(dser);
@@ -384,12 +386,16 @@ public:
     void set(size_t idx, String* val) {
         arr->set(val,idx);
     }
+    //size of this index
     size_t size() {
         return arr->size();
     }
+    //pushes a String at the end of this.
     void push_back(String* val) {
         arr->add(val);
     }
+
+    //Serializes this column.
     void serialize(Serializer &ser) {
         arr->serialize(ser);
     }
@@ -421,6 +427,7 @@ public:
     StringColumn(int n, ...) {
 
     }
+    //
     StringColumn(Deserializer &dser) {
         len = dser.read_size_t();
         chunks_ = dser.read_size_t();
@@ -453,13 +460,15 @@ public:
     String* get(size_t idx) {
         return arr[idx / arg.rows_per_chunk]->get(idx % arg.rows_per_chunk);
     }
-    /** Out of bound idx is undefined. */
+    /** Out of bound idx is undefined. This is the chunk implementation of this node.  */
     void set(size_t idx, String* val) {
         arr[idx / arg.rows_per_chunk]->set(idx % arg.rows_per_chunk,val);
     }
     size_t size() {
         return len;
     }
+
+    //adds a value to the column at the end.
     void push_back(String* val) {
         if (len >= cap_) {
             StringChunk ** newarr = new StringChunk*[internal_chunk * 2];
@@ -487,6 +496,7 @@ public:
         }
     }
 
+    //Adds a chunk of data to the end of the dataframe.
     void add_chunk(StringChunk* s) {
         if (chunks_ >= internal_chunk) {
             StringChunk ** newarr = new StringChunk*[internal_chunk * 2];
@@ -512,6 +522,7 @@ public:
         }
     }
 
+    //Retrieves a given chunk of data based on the types of chunks in the dataframe. 
     StringChunk* get_chunk(size_t chunk) {
         return arr[chunk];
     }
