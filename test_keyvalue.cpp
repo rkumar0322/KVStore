@@ -1,8 +1,35 @@
 #include <iostream>
 #include <assert.h>
 #include <stdio.h>
-#include "arg.h"
+#include "helpers/serial.h"
+#include "helpers/helper.h"
+#include "helpers/object.h"
+#include "helpers/string.h"
 #include "KDStore/keyvalue.h"
+#include "network/thread.h"
+#include "helpers/array.h"
+#include "KDStore/map.h"
+#include "KDStore/newmap.h"
+#include "network/thread.h"
+#include <time.h>
+#include "arg.h"
+#include "network/message.h"
+#include "network/network_ifc.h"
+#include "network/network_pseudo.h"
+#include "network/network_ip.h"
+#include "DataFrame/schema.h"
+#include "DataFrame/column.h"
+#include "DataFrame/row.h"
+#include "application/reader.h"
+#include "application/writer.h"
+#include "DataFrame/dataframe.h"
+#include "KDStore/kdstore.h"
+#include "application/application.h"
+#include "application/wordcount.h"
+//#include "application/linus.h"
+#include <time.h>
+
+Args arg;
 
 void test_key() {
     String* k1 = new String("hello");

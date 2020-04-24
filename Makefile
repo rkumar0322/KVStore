@@ -31,7 +31,7 @@ RANDOM:
 	g++ -g -Wall -pthread -pedantic -std=c++11 main.cpp -o ts4
 	./ts4 -nodes 3 -pseudo true -app wc -port 3780 -index 0 -masterip 127.0.0.1 -masterport 3780 -ip 127.0.0.1
 
-Demo:
+demo:
 	g++ -g -Wall -pthread -pedantic -std=c++11 main.cpp -o ts4
 	./ts4 -nodes 3 -pseudo true -app demo -port 3780 -index 1 -masterip 127.0.0.1 -masterport 3780 -ip 127.0.0.7
 
@@ -49,4 +49,4 @@ no_valgrind:
 run:
 	docker build -t cs4500:0.1 .
 	- rm -rf ./part1/test-array
-	- docker run -ti -v `pwd`:/test cs4500:0.1 bash -c "cd /test;make network2"
+	- docker run -ti -v `pwd`:/test cs4500:0.1 bash -c "cd /test;make test_serialize;make test_kvstore;"
