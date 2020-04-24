@@ -1,6 +1,7 @@
 #include <iostream>
 #include <assert.h>
 #include <stdio.h>
+#include "arg.h"
 #include "KDStore/keyvalue.h"
 
 void test_key() {
