@@ -76,6 +76,7 @@ public:
         delete own;
     }
 
+    /**merges the results of the dataframes together. */
     void merge(DataFrame* df, SIMap& m) {
         printf("Map Size %d\n", m.size());
         printf("DF Size %d\n", df->nrows());

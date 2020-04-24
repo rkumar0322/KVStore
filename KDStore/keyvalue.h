@@ -34,11 +34,19 @@ class Key: public Object {
         nodeidx = s;
         }
 
+        /**
+         * Serializes the object
+         * @param dser serializer Object
+         */
 		Key(Deserializer &dser) {
             nodeidx = dser.read_size_t();
 		    key_ = new String(dser);
 		}
 
+		/**
+		 * Serializes this Key Object
+		 * @param ser
+		 */
 		void serialize(Serializer &ser) {
 		    ser.write_size_t(nodeidx);
             key_->serialize(ser);
@@ -59,11 +67,19 @@ class Key: public Object {
 				(nodeidx == k->nodeidx);
 		}
 
+		/**
+		 * The Index of this node.
+		 * @return the index of this node
+		 */
 		size_t nodeidx_() {
 		    return nodeidx;
 		}
 };
 
+
+/**
+ * Constructs the Key objects accordingly to a pattern predefined. .
+ */
 class KeyBuff : public Object {
 public:
     Key* orig_; // external
@@ -71,6 +87,9 @@ public:
     KeyBuff(Key* orig) : orig_(orig), buf_(orig->key_->cstr_) {
     }
 
+    /**
+    * Constructs the Key objects accordingly to a pattern predefined. .
+    */
     KeyBuff& c(String &s) {
         buf_.c(s);
         return *this;
@@ -85,6 +104,10 @@ public:
         return *this;
     }
 
+
+    /**
+    * Constructs the Key objects accordingly to a pattern predefined. .
+    */
     Key* get() {
             String* s = buf_.get();
             buf_.c(orig_->key_->cstr_);
@@ -153,6 +176,10 @@ class Value: public Object {
 		}
 };
 
+
+/**
+ * A collection of Objects that are of type KVPair.
+ */
 class KVPair : public Object {
 public:
     Key k;
@@ -163,6 +190,9 @@ public:
         v = v_;
     }
 
+    /**
+    * Deserializes This KVPair Object
+    */
     KVPair(Deserializer &d) {
         Key* k1 = new Key(d);
         Value* v1 = new Value(d);
@@ -170,6 +200,9 @@ public:
         k = *k1;
     }
 
+    /**
+    * A Serializes This KVPair Object
+    */
     void serialize(Serializer &s) {
         k.serialize(s);
         v.serialize(s);

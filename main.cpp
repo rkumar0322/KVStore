@@ -71,7 +71,12 @@ public:
     }
 
 };
-
+/**
+ * pick the qpplication that is inended to be run.
+ * @param i : the node of the application
+ * @param net : the Network Object
+ * @return the application that is intended to be run
+ */
 Application* pick(size_t i,NetworkIfc& net) {
     if (strcmp(arg.app,"demo") == 0) {
         return new Demo(i,net);
@@ -112,14 +117,12 @@ public:
         a_->kv.applicationdone();
     }
 };
-
-int main3() {
-    MQArray* a = new MQArray(3);
-    MessageQueue* b = a->get_(0);
-    delete a;
-    return 0;
-}
-
+/**
+ * The eau2 system
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char** argv) {
     arg.parse(argc,argv);
     printf("makes it here\n");
@@ -163,23 +166,5 @@ int main(int argc, char** argv) {
     } catch(...) {
         LOG("ERROR: Unknown");
     }
-    delete network;
-}
-
-void basic_example() {
-    NetworkPseudo* network = new NetworkPseudo(3);
-    NetworkUser* a = new NetworkUser(network, 0);
-    NetworkUser* b = new NetworkUser(network, 1);
-    NetworkUser* c = new NetworkUser(network, 2);
-    a->start();
-    b->start();
-    c->start();
-    a->join();
-    b->join();
-    c->join();
-    printf("FINISHES THE PROCESS: nodes in the newtork: %d\n",network->threads_->len);
-    delete a;
-    delete b;
-    delete c;
     delete network;
 }

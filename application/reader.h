@@ -1,4 +1,7 @@
-
+/**
+ *
+ * A class for visiting DataFrames
+ * **/
 
 class Reader {
 public:
@@ -7,6 +10,11 @@ public:
 
 };
 
+
+/**
+ *
+ * A class for visiting DataFrames
+ * **/
 
 class Adder : public Reader {
 public:

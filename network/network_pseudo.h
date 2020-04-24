@@ -1,4 +1,8 @@
 #include <set>
+
+/**
+ * Message Array which internally stores messages
+ */
 class MessArrayQ : public Array {
 public:
     MessArrayQ(size_t cap): Array(cap) {
@@ -15,6 +19,9 @@ public:
     }
 };
 
+/**
+ * Message Queue which internally treats the underlying message array as a queue.
+ */
 class MessageQueue : public Object {
 public:
     MessArrayQ* q_;
@@ -39,6 +46,10 @@ public:
         lock_.unlock();
     }
 
+
+    /**
+    * Peeks at the first message without removing it.
+    */
     Message* peek() {
         if (q_->len == 0) {
             return nullptr;
@@ -47,6 +58,9 @@ public:
         }
     }
 
+    /**
+    * Pops the last message off this message queue.
+    */
     Message* pop() {
         lock_.lock();
         if (q_->len == 0) {
@@ -65,6 +79,9 @@ public:
 
 };
 
+    /**
+    * Container class that makes it easier to wrap size_t map values.
+    */
 class Sizet_Container: public Object {
 public:
     size_t size_;
@@ -75,6 +92,9 @@ public:
 };
 
 
+    /**
+   * Map that associates a thread with an index (the node).
+   */
 class String_size_t_Map : public Map {
 public:
     Lock lock_;
@@ -88,6 +108,9 @@ public:
         delete[] values_;
     }
 
+    /**
+   * Inserts a pair of a thread id and a node into the map.
+   */
     void set_u(String& k, size_t v) {
         lock_.lock();
         Sizet_Container* s = new Sizet_Container(v);
@@ -95,6 +118,9 @@ public:
         lock_.unlock();
     }
 
+    /**
+   * retrieves the node from the thread
+   */
     size_t get(String k) {
         lock_.lock();
         Object* res = get_(&k);
@@ -104,6 +130,9 @@ public:
     }
 };
 
+/**
+   * Array of MessageQueues
+   */
 class MQArray : public Array {
 public:
     Lock lock;
@@ -119,6 +148,10 @@ public:
             delete (MessageQueue*)get(i);
         }
     }
+
+    /**
+   * Get a messagequeue in correspondence to  the node
+   */
     MessageQueue* get_(size_t i) {
         lock.lock();
         Object* a = arr[i];
@@ -127,6 +160,9 @@ public:
     }
 };
 
+/**
+  * Fake Network where each node is associated with a collection of threads.
+  */
 class NetworkPseudo : public NetworkIfc {
 public:
     String_size_t_Map* threads_;
@@ -148,6 +184,10 @@ public:
         delete qs_;
     }
 
+    /**
+     * rigisters this thread into the network.
+     * @param idx the node to register this thread on.
+     */
     void register_node(size_t idx) override {
         String* tid = Thread::thread_id();
         threads_->set_u(*tid,idx);
@@ -156,10 +196,17 @@ public:
         }
     }
 
+    /**
+     * Sends a message through the network. via a synchronized message queue.
+     */
     void send_m(Message* msg) override {
         qs_->get_(msg->target_)->push_(msg);
     }
 
+
+    /**
+     * Sends a message through the network. via a synchronized message queue.
+     */
     Message* recv_m() override {
         lock.lock();
         if (threads_->len != (qs_->len * 2) +1) {

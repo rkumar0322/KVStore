@@ -1,3 +1,4 @@
+/****/
 class Writer: public Object {
 public:
 

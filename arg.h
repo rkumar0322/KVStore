@@ -18,6 +18,11 @@ public:
 
     Args() {}
 
+    /**
+     * The Arguments to be read in.
+     * @param argc the arguments
+     * @param argv
+     */
     void parse(int argc, char** argv) {
         for (int i = 1; i < argc;i++) {
             char* a = argv[i++];

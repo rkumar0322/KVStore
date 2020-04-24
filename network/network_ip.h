@@ -9,6 +9,9 @@
 
 #define ARG arg.num_nodes
 
+/**
+ *
+ */
 class NodeInfo : public Object {
 public:
     unsigned id;

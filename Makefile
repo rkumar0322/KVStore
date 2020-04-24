@@ -15,15 +15,15 @@ network1:
 
 network2:
 	g++ -g -Wall -pthread -pedantic -std=c++11 main.cpp -o ts6
-	valgrind valgrind --leak-check=full ./ts6 -nodes 3 -pseudo true -app wc -file 100k.txt
+	./ts6 -nodes 3 -pseudo true -app wc -file 100k.txt
 
 network_local:
 	g++ -g -Wall -pthread -pedantic -std=c++11 main.cpp -o ts4
-	./ts4 -nodes 3 -pseudo false -app demo -port 3780 -index 0 -masterip 127.0.0.1 -masterport 3780 -ip 127.0.0.1
+	./ts4 -nodes 3 -pseudo true -app demo -port 3780 -index 0 -masterip 127.0.0.1 -masterport 3780 -ip 127.0.0.1
 
 network_client:
 	g++ -g -Wall -pthread -pedantic -std=c++11 main.cpp -o ts4
-	./ts4 -nodes 3 -pseudo false -app demo -port 3780 -index 1 -masterip 127.0.0.1 -masterport 3780 -ip 127.0.0.7
+	./ts4 -nodes 3 -pseudo true -app demo -port 3780 -index 1 -masterip 127.0.0.1 -masterport 3780 -ip 127.0.0.7
 
 no_valgrind:
 	g++ -g -Wall -pedantic -std=c++11 test.cpp -o ts1
